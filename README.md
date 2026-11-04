@@ -19,6 +19,7 @@ This is the frontend foundation, not a functioning AI model yet. Live intelligen
 Open `index.html` for a basic preview. Service-worker/PWA features require HTTPS or localhost. GitHub Pages can host this static frontend after Pages is enabled in repository settings.
 
 ## Project documents
+- [Product vision and agreed requirements](docs/PROJECT-VISION.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Self-update design](docs/SELF-UPDATE.md)
