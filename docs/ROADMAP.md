@@ -20,11 +20,12 @@
 
 ## Phase 1 — Build our own AI application engine (next)
 - [ ] Define a provider-free internal model adapter interface
-- [ ] Build conversation/session manager and message validation
-- [ ] Build intent router and task planner modules
+- [x] Build initial message validation and local conversation history
+- [x] Build explicit user-controlled local memory notes with search, delete and export
+- [x] Build intent router and task planner modules
 - [ ] Build a permissioned tool registry and tool-result format
 - [ ] Build local settings, language handling and capability status
-- [ ] Add tests for every module
+- [x] Add automated tests for core and local memory modules
 - [ ] Evaluate free/open-source models for local execution; verify device/server requirements and licenses
 - [ ] Connect only a model that can run without a paid API; otherwise keep the adapter clearly marked as not connected
 - [ ] Add streaming UI once a free local runtime is selected
