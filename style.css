@@ -33,3 +33,4 @@
 .memory-item p{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;color:var(--text);line-height:1.6}
 .memory-item small{color:var(--muted)}
 @media(max-width:520px){.memory-toolbar{display:grid;grid-template-columns:1fr 1fr}.memory-toolbar input{grid-column:1/-1}.memory-toolbar button{width:100%}}
+\n#knowledgeForm input{width:100%;background:#0d1527;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px}\n
