@@ -1,10 +1,10 @@
 (function(root){
 "use strict";
 let config={baseUrl:"",apiKey:"",connected:false};
-function cleanBase(value){return String(value||"").trim().replace(/\\/+$/,"")}
+function cleanBase(value){return String(value||"").trim().replace(/\/+$/,"")}
 async function connect(baseUrl,apiKey){
  const base=cleanBase(baseUrl);
- if(!/^https?:\\/\\//i.test(base))throw new Error("Server URL must begin with https:// (or http:// for local testing).");
+ if(!/^https?:\/\//i.test(base))throw new Error("Server URL must begin with https:// (or http:// for local testing).");
  if(!apiKey.trim())throw new Error("Enter the private runtime access key.");
  const response=await fetch(base+"/health",{method:"GET",headers:{Accept:"application/json"},cache:"no-store"});
  if(!response.ok)throw new Error("Runtime health check failed: HTTP "+response.status);
@@ -26,9 +26,9 @@ async function chat(messages,options){
  });
  if(!response.ok){let detail="HTTP "+response.status;try{const body=await response.json();detail=body.detail||detail}catch{}throw new Error(detail)}
  const data=await response.json();
- const text=data&&data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
- if(typeof text!=="string"||!text.trim())throw new Error("The model returned an empty response.");
- return {text:text.trim(),usage:data.usage||null,model:data.model||getModel(),runtimeSeconds:data.runtime_seconds||null};
+ const answer=data&&data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+ if(typeof answer!=="string"||!answer.trim())throw new Error("The model returned an empty response.");
+ return {text:answer.trim(),usage:data.usage||null,model:data.model||getModel(),runtimeSeconds:data.runtime_seconds||null};
 }
 root.IntelligentModelClient={connect,disconnect,isConnected,getModel,chat};
 })(typeof globalThis!=="undefined"?globalThis:this);
