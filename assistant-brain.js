@@ -23,8 +23,11 @@ function understand(input,options){
  const imperative=/\b(please|do|make|build|create|fix|check|search|find|start|continue|update|add|remove|करो|करें|बनाओ|बना|जोड़ो|हटाओ|देखो|जाँचो|शुरू|चालू|खोजो|ढूंढो|बताओ)\b/i.test(n);
  const kind=greeting?"greeting":thanks?"thanks":asksQuestion?"question":imperative?"command":primary.name==="general"?"conversation":"request";
  const requestedOutputs=[];if(/(list|सूची|लिस्ट)/i.test(n))requestedOutputs.push("list");if(/(table|तालिका)/i.test(n))requestedOutputs.push("table");if(/(step|कदम|तरीका)/i.test(n))requestedOutputs.push("steps");if(/(code|coding|कोड)/i.test(n))requestedOutputs.push("code");
- const constraints=[];if(/\b(free|no cost|without payment|मुफ्त|फ्री|बिना खर्च)\b/i.test(n))constraints.push("free-only");if(/\b(hindi|हिंदी)\b/i.test(n))constraints.push("Hindi");if(/\b(english|अंग्रेज़ी|अंग्रेजी)\b/i.test(n))constraints.push("English");if(/(don't|do not|mat|नहीं करना|मत करना)/i.test(n))constraints.push("negative instruction");
- const q=tokens(n).filter(t=>t.length>2&&!STOP.has(t));
+ const constraints=[],allTokens=tokens(n);
+ if(["free","मुफ्त","फ्री"].some(x=>allTokens.includes(x))||n.includes("no cost")||n.includes("without payment")||n.includes("बिना खर्च"))constraints.push("free-only");
+ if(["hindi","हिंदी"].some(x=>allTokens.includes(x)))constraints.push("Hindi");
+ if(["english","अंग्रेज़ी","अंग्रेजी"].some(x=>allTokens.includes(x)))constraints.push("English");
+ if(["dont","mat","मत"].some(x=>allTokens.includes(x))||n.includes("do not")||n.includes("नहीं करना"))constraints.push("negative instruction");
  const confidence=primary.score===0?0.25:Math.min(0.96,0.45+primary.score*0.12);
  const ambiguity=primary.name==="general"&&kind!=="greeting"&&kind!=="thanks";
  const next=({research:["सवाल स्पष्ट करना","अलग-अलग भरोसेमंद स्रोतों में खोजना","जानकारी और तारीखों की तुलना करना","स्रोतों सहित निष्कर्ष देना"],coding:["मौजूदा फाइलें और समस्या जाँचना","छोटा बदलाव तैयार करना","वास्तविक टेस्ट चलाना","नतीजा और बदली फाइलें बताना"],files:["फाइल और मांगा गया काम पहचानना","संबंधित सामग्री पढ़ना","जरूरी डेटा निकालना और जाँचना","सीमाओं सहित उत्तर देना"],explain:["मुख्य विषय पहचानना","सरल भाषा में अर्थ समझाना","उदाहरण देना","जरूरत हो तो अगला कदम बताना"],planning:["लक्ष्य और शर्तें निकालना","काम को चरणों में बाँटना","निर्भरता और जोखिम देखना","पहला व्यावहारिक कदम करना"],memory:["पिछले निर्देशों का उपलब्ध रिकॉर्ड खोजना","मिलान की पुष्टि करना","याद रिकॉर्ड की सीमा बताना"],general:["आपकी बात का आशय समझना","उपलब्ध क्षमता जाँचना","जरूरत हो तो एक स्पष्ट सवाल पूछना"]})[primary.name]||[];
