@@ -31,7 +31,7 @@
 - [ ] Add streaming UI once a free local runtime is selected
 
 ## Phase 2 — Free/local tools
-- [ ] Local knowledge and document processing
+- [x] Local searchable knowledge library with categories, tags, ranked retrieval, delete and JSON backup
 - [ ] File upload and document/data analysis using free libraries
 - [ ] Web research only through suitable free/public sources, respecting their terms and limits
 - [ ] Isolated coding workspace
