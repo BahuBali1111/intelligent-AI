@@ -29,7 +29,8 @@ jobs:
         run: |
           node --check app.js
           node --check core.js
-          node --test tests/core.test.js
+          node --check memory.js
+          node --test tests/core.test.js tests/memory.test.js
       - name: Validate JSON manifest
         run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
       - name: Check core page references
@@ -38,3 +39,4 @@ jobs:
           grep -Eq 'src="\./app\.js(\?[^\"]*)?"' index.html
           grep -q 'rel="manifest"' index.html
           grep -q 'serviceWorker.register' app.js
+          grep -q 'memory.js' index.html
