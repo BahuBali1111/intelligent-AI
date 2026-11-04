@@ -47,3 +47,9 @@
 .chat-source-list{display:grid;gap:7px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}.chat-source-list a{color:var(--cyan);font-size:12px;line-height:1.5;overflow-wrap:anywhere}.message p{white-space:pre-wrap;overflow-wrap:anywhere}
 
 .continuity-panel{margin:18px 0 24px;padding:16px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#141e33,#0f1729)}.continuity-panel>p{color:var(--muted);line-height:1.6}.continuity-panel h2,.continuity-panel h3{margin:8px 0 12px}.continuity-panel .memory-list{margin-bottom:14px}.continuity-panel .memory-item{padding:12px;margin:8px 0}.continuity-panel .memory-item p{line-height:1.55;overflow-wrap:anywhere}.continuity-panel .memory-toolbar{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Private model connection controls */
+#modelConnectForm input{width:100%;background:#0d1527;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px}
+.model-security-note{font-size:11px;line-height:1.6;color:#e6c98c;background:#d3a65a0c;border:1px solid #d3a65a55;border-radius:10px;padding:12px}
+.model-connect-actions{display:flex;gap:10px;flex-wrap:wrap}
+#modelConnectionStatus{overflow-wrap:anywhere}
