@@ -24,10 +24,17 @@ function send(t){
  if(!checked.ok){alert(checked.error);return}
  const clean=checked.value,plan=window.IntelligentCore.createPlan(clean);
  const labels={en:{research:"research",coding:"coding",files:"file analysis",planning:"planning",general:"general"},hi:{research:"रिसर्च",coding:"कोडिंग",files:"फाइल विश्लेषण",planning:"योजना",general:"सामान्य"}};
- const steps=plan.steps.map((s,i)=>(i+1)+". "+s).join("\\n");
+ const hindiSteps={
+  research:["रिसर्च के सवाल को साफ़ समझना","भरोसेमंद वेबसाइट और स्रोत ढूँढना","अलग-अलग स्रोतों की जानकारी मिलाना","नतीजे और स्रोतों का सार देना"],
+  coding:["आपकी जरूरत और समस्या समझना","संबंधित कोड फाइलें जाँचना","छोटा और सही बदलाव तैयार करना","टेस्ट चलाकर नतीजा बताना"],
+  files:["फाइल का प्रकार और आपका काम समझना","जरूरी जानकारी निकालना","जानकारी का विश्लेषण करना","नतीजे और सीमाएँ बताना"],
+  planning:["आपका लक्ष्य तय करना","काम को क्रमवार चरणों में बाँटना","जरूरी चीजें और जोखिम पहचानना","प्रगति जाँचकर अगला कदम बताना"],
+  general:["आपकी बात ध्यान से समझना","देखना कि कौन-सी उपलब्ध क्षमता मदद कर सकती है","जरूरत हो तो एक जरूरी सवाल पूछना"]
+ };
+ const steps=(lang==="hi"?hindiSteps[plan.intent]:plan.steps).map((x,i)=>(i+1)+". "+x).join("\n");
  const reply=lang==="hi"
-  ? "मैंने आपके संदेश को "+labels.hi[plan.intent]+" काम के रूप में पहचाना है।\\n\\nप्रस्तावित कदम:\\n"+steps+"\\n\\nयह हमारा अपना शुरुआती नियम-आधारित Core Engine है। अभी प्रशिक्षित AI मॉडल जुड़ा नहीं है, इसलिए यह वास्तविक AI उत्तर नहीं है।"
-  : "I classified this as a "+labels.en[plan.intent]+" task.\\n\\nProposed steps:\\n"+steps+"\\n\\nThis is our own early rule-based Core Engine. A trained AI model is not connected yet, so this is not a real AI-generated answer.";
+  ? "मैंने आपके संदेश को "+labels.hi[plan.intent]+" के काम के रूप में पहचाना है।\n\nअगले कदम:\n"+steps+"\n\nअभी क्या बाकी है: असली AI मॉडल, लाइव ब्राउज़र रिसर्च और जुड़े हुए टूल्स को सुरक्षित तरीके से जोड़ना। ये अभी तैयार नहीं हैं।\n\nध्यान दें: यह हमारा अपना शुरुआती Core Engine है, असली AI मॉडल का जवाब नहीं।"
+  : "I classified this as a "+labels.en[plan.intent]+" task.\n\nNext steps:\n"+steps+"\n\nStill to build: a real AI model connection, live browser research and secure tool integrations. These are not connected yet.\n\nNote: this is our own early Core Engine, not an answer from a live AI model.";
  messages.push({role:"user",text:clean,at:new Date().toISOString()});
  messages.push({role:"assistant",text:reply,at:new Date().toISOString(),demo:true,intent:plan.intent});
  messages=messages.slice(-300);saveMessages();renderMessages();$("#input").value="";
