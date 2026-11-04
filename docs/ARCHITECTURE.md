@@ -34,3 +34,7 @@ Honest capability disclosure; no surprise costs; user control; minimum data coll
 
 ## Conversation continuity engine
 `context-engine.js` keeps a local index of recent user instructions and a transparent set of confirmed Intelligent AI project rules. It supports keyword retrieval, bounded local history, common-secret redaction, export and clearing the recent index. The confirmed rules are versioned in source; recent user instructions remain in the current browser only. This is continuity support, not a language model: it does not understand every nuance or synchronize across devices. The app must continue to be honest about those limits.
+
+
+## Request understanding and response planning
+`assistant-brain.js` normalizes English/Hindi text, detects common task intents, identifies question/command/greeting patterns, extracts simple constraints and requested formats, marks low-confidence requests for clarification, and creates a structured response plan. The chat uses the selected interface language and can retrieve related local knowledge entries. This is a deterministic starter layer, not a trained language model: nuanced Hinglish, complex multi-part instructions and factual reasoning still require model weights and evaluation. The engine must never present its confidence score as a guarantee of correctness.
