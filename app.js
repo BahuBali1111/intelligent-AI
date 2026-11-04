@@ -7,6 +7,7 @@ const researchDesk=window.IntelligentResearch.createResearchDesk(localStorage);
 const researchAnalyzer=window.IntelligentResearchAnalyzer;
 const researchEngine=window.IntelligentResearchEngine.createResearchEngine();
 const contextStore=window.IntelligentContext.createContextStore(localStorage);
+const assistantBrain=window.IntelligentBrain;
 let latestResearch=[];let researchBusy=false;
 const codeWorkbench=window.IntelligentCodeWorkbench.createCodeWorkbench(localStorage);
 let lang=localStorage.getItem(LANG_KEY)||"en";
@@ -25,7 +26,7 @@ function tab(id){$$(".tab").forEach(x=>x.classList.toggle("show",x.id===id));$$(
 async function send(t){
  const checked=window.IntelligentCore.validateMessage(t);
  if(!checked.ok){alert(checked.error);return}
- const clean=checked.value,plan=window.IntelligentCore.createPlan(clean);
+ const clean=checked.value,analysis=assistantBrain.understand(clean);analysis.language=lang;const plan={intent:analysis.intent};
  const labels={en:{research:"research",coding:"coding",files:"file analysis",planning:"planning",general:"general"},hi:{research:"रिसर्च",coding:"कोडिंग",files:"फाइल विश्लेषण",planning:"योजना",general:"सामान्य"}};
  const hindiSteps={research:["रिसर्च के सवाल को साफ़ समझना","भरोसेमंद वेबसाइट और स्रोत ढूँढना","अलग-अलग स्रोतों की जानकारी मिलाना","नतीजे और स्रोतों का सार देना"],coding:["आपकी जरूरत और समस्या समझना","संबंधित कोड फाइलें जाँचना","छोटा और सही बदलाव तैयार करना","टेस्ट चलाकर नतीजा बताना"],files:["फाइल का प्रकार और आपका काम समझना","जरूरी जानकारी निकालना","जानकारी का विश्लेषण करना","नतीजे और सीमाएँ बताना"],planning:["आपका लक्ष्य तय करना","काम को क्रमवार चरणों में बाँटना","जरूरी चीजें और जोखिम पहचानना","प्रगति जाँचकर अगला कदम बताना"],general:["आपकी बात ध्यान से समझना","देखना कि कौन-सी उपलब्ध क्षमता मदद कर सकती है","जरूरत हो तो एक जरूरी सवाल पूछना"]};
  messages.push({role:"user",text:clean,at:new Date().toISOString()});contextStore.capture(clean);renderContinuity();
@@ -35,8 +36,8 @@ async function send(t){
   try{const result=await researchEngine.search(clean);pending.text=lang==="hi"?"मैंने "+result.items.length+" परिणाम पाए। नीचे मूल स्रोत खोल सकते हैं। "+(result.failedCount?"कुछ स्रोतों ने जवाब नहीं दिया।":"")+" यह पाँच सार्वजनिक इंडेक्स की खोज है، पूरा इंटरनेट नहीं।":"I found "+result.items.length+" results. Open the original sources below. "+(result.failedCount?"Some sources did not respond.":"")+" This searches five public indexes, not the entire web.";pending.sources=result.items.slice(0,8).map(x=>({title:x.title,source:x.source,url:x.url}));pending.at=new Date().toISOString();}catch(err){pending.text=(lang==="hi"?"रिसर्च खोज पूरी नहीं हो सकी: ":"Research search could not complete: ")+err.message}
   saveMessages();renderMessages();return;
  }
- const steps=(lang==="hi"?hindiSteps[plan.intent]:plan.steps).map((x,i)=>(i+1)+". "+x).join("\n");
- const reply=lang==="hi"?"मैंने आपके संदेश को "+labels.hi[plan.intent]+" के काम के रूप में पहचाना है।\n\nअगले कदम:\n"+steps+"\n\nअभी क्या बाकी है: असली AI मॉडल, लाइव ब्राउज़र रिसर्च और जुड़े हुए टूल्स को सुरक्षित तरीके से जोड़ना। ये अभी तैयार नहीं हैं।\n\nध्यान दें: यह हमारा अपना शुरुआती Core Engine है, असली AI मॉडल का जवाब नहीं.":"I classified this as a "+labels.en[plan.intent]+" task.\n\nNext steps:\n"+steps+"\n\nStill to build: a real AI model connection, live browser research and secure tool integrations. These are not connected yet.\n\nNote: this is our own early Core Engine, not an answer from a live AI model.";
+ const related=knowledgeStore.search(clean,{limit:3});
+ const reply=assistantBrain.buildReply(analysis,{knowledge:related,context:contextStore.search(clean,4),capabilityNote:lang==="hi"?"ध्यान दें: अभी वास्तविक भाषा मॉडल जुड़ा नहीं है। मैं उपलब्ध रिसर्च मॉड्यूल चला सकता हूँ; कोड बदलाव इस चैट के बजाय अभी GitHub पर अलग से लागू करने पड़ते हैं।":"Note: no live language model is connected yet. I can run the available research module; code changes still need to be applied to GitHub separately rather than directly from this chat."});
  messages.push({role:"assistant",text:reply,at:new Date().toISOString(),demo:true,intent:plan.intent});messages=messages.slice(-300);saveMessages();renderMessages();$("#input").value="";
 }
 
