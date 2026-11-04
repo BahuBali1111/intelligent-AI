@@ -18,7 +18,7 @@ jobs:
       - name: Check required application files
         run: |
           set -eu
-          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md; do
+          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js tests/memory.test.js; do
             test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
           done
       - name: Validate JavaScript syntax
