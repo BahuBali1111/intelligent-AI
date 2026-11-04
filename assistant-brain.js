@@ -23,7 +23,7 @@ function understand(input,options){
  const imperative=/\b(please|do|make|build|create|fix|check|search|find|start|continue|update|add|remove|करो|करें|बनाओ|बना|जोड़ो|हटाओ|देखो|जाँचो|शुरू|चालू|खोजो|ढूंढो|बताओ)\b/i.test(n);
  const kind=greeting?"greeting":thanks?"thanks":asksQuestion?"question":imperative?"command":primary.name==="general"?"conversation":"request";
  const requestedOutputs=[];if(/(list|सूची|लिस्ट)/i.test(n))requestedOutputs.push("list");if(/(table|तालिका)/i.test(n))requestedOutputs.push("table");if(/(step|कदम|तरीका)/i.test(n))requestedOutputs.push("steps");if(/(code|coding|कोड)/i.test(n))requestedOutputs.push("code");
- const constraints=[],allTokens=tokens(n);
+ const constraints=[],allTokens=tokens(n),q=allTokens.filter(t=>t.length>2&&!STOP.has(t));
  if(["free","मुफ्त","फ्री"].some(x=>allTokens.includes(x))||n.includes("no cost")||n.includes("without payment")||n.includes("बिना खर्च"))constraints.push("free-only");
  if(["hindi","हिंदी"].some(x=>allTokens.includes(x)))constraints.push("Hindi");
  if(["english","अंग्रेज़ी","अंग्रेजी"].some(x=>allTokens.includes(x)))constraints.push("English");
