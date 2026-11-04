@@ -18,7 +18,7 @@ jobs:
       - name: Check required application files
         run: |
           set -eu
-          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js tests/memory.test.js; do
+          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js knowledge.js tests/memory.test.js tests/knowledge.test.js; do
             test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
           done
       - name: Validate JavaScript syntax
@@ -29,8 +29,8 @@ jobs:
         run: |
           node --check app.js
           node --check core.js
-          node --check memory.js
-          node --test tests/core.test.js tests/memory.test.js
+          node --check memory.js\n          node --check knowledge.js
+          node --test tests/core.test.js tests/memory.test.js tests/knowledge.test.js
       - name: Validate JSON manifest
         run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
       - name: Check core page references
@@ -39,4 +39,4 @@ jobs:
           grep -Eq 'src="\./app\.js(\?[^\"]*)?"' index.html
           grep -q 'rel="manifest"' index.html
           grep -q 'serviceWorker.register' app.js
-          grep -q 'memory.js' index.html
+          grep -q 'memory.js' index.html\n          grep -q 'knowledge.js' index.html
