@@ -1,0 +1,10 @@
+"use strict";
+const test=require("node:test"),assert=require("node:assert/strict"),{createKnowledgeStore,terms}=require("../knowledge.js");
+function storage(){const data=new Map();return {getItem:k=>data.has(k)?data.get(k):null,setItem:(k,v)=>data.set(k,v),removeItem:k=>data.delete(k)}}
+test("adds and lists knowledge",()=>{const k=createKnowledgeStore(storage());k.add({title:"Project architecture",content:"A modular local-first AI engine",category:"project"});assert.equal(k.list().length,1)});
+test("search ranks title and finds relevant content",()=>{const k=createKnowledgeStore(storage());k.add({title:"Memory engine",content:"Stores approved notes locally"});k.add({title:"Maps",content:"Road routing and map tiles"});assert.equal(k.search("memory")[0].title,"Memory engine");assert.equal(k.search("road routing").length,1)});
+test("filters by category",()=>{const k=createKnowledgeStore(storage());k.add({title:"Memory",content:"Local notes",category:"design"});k.add({title:"Memory tests",content:"Automated tests",category:"engineering"});assert.equal(k.search("memory",{category:"engineering"}).length,1)});
+test("rejects invalid and oversized entries",()=>{const k=createKnowledgeStore(storage());assert.throws(()=>k.add({title:"",content:"x"}));assert.throws(()=>k.add({title:"x",content:" "}));assert.throws(()=>k.add({title:"x",content:"z".repeat(12001)}))});
+test("removes and clears entries",()=>{const k=createKnowledgeStore(storage()),d=k.add({title:"One",content:"First"});assert.equal(k.remove(d.id),true);k.add({title:"Two",content:"Second"});k.clear();assert.equal(k.list().length,0)});
+test("exports and imports backup",()=>{const a=createKnowledgeStore(storage());a.add({title:"Gujarati places",content:"Savarkundla and nearby towns",tags:["Gujarat"]});const b=createKnowledgeStore(storage(),"backup");assert.equal(b.importData(a.exportData()),1);assert.equal(b.search("Savarkundla")[0].title,"Gujarati places")});
+test("tokenizer handles Hindi and English",()=>{assert.ok(terms("भारत Gujarat").includes("भारत"));assert.ok(terms("भारत Gujarat").includes("gujarat"))});
