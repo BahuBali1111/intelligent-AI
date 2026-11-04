@@ -33,7 +33,7 @@
 ## Phase 2 — Free/local tools
 - [x] Local searchable knowledge library with categories, tags, ranked retrieval, delete and JSON backup
 - [ ] File upload and document/data analysis using free libraries
-- [ ] Web research only through suitable free/public sources, respecting their terms and limits
+- [x] Multi-source browser research links and local source notebook; automatic page ingestion remains a later connector task
 - [ ] Isolated coding workspace
 - [ ] Planner and specialist agent orchestration
 - [ ] Optional local voice and image understanding where device capability permits
