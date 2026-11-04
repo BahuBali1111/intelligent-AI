@@ -25,3 +25,10 @@ Never run arbitrary downloaded code in production. Never put GitHub tokens, AI k
 
 ## Multi-source research desk
 The browser UI prepares search links for Google, Bing, DuckDuckGo, Brave Search, GitHub Code, MDN, Stack Overflow and Reddit. The owner opens and reviews results, then saves selected source URLs and notes in a local notebook. This static Pages app does not claim to scrape arbitrary sites, bypass access controls, or fetch cross-origin pages. A future server-side research connector must respect site terms, robots policies, rate limits, privacy and source attribution. Retrieved code is untrusted input: inspect provenance, licenses, dependencies and security before adapting it; run candidate changes in isolated tests and require owner authorization for repository writes and release.
+
+
+## Owner-facing automatic update switch
+The Self-update centre exposes one master ON/OFF preference stored locally as `ia-auto`. OFF means no automatic update action should be initiated. ON records owner intent for the future update service; this static browser version does not yet have a trusted server-side worker to fetch code, run tests, write commits or deploy. When implemented, the switch will be the single user-facing control; internal safeguards for secrets, malware, destructive operations, provenance, backups and recovery remain necessary and are not user-facing restriction toggles.
+
+## Research analysis milestone
+A local analyzer now reviews only saved source titles, queries and notes. It reports recurring terms, source coverage and topic matches, and can create a draft improvement proposal. It does not fetch pages, understand claims semantically or verify facts. A future model-assisted analyzer must cite source URLs and distinguish evidence, inference and uncertainty.
