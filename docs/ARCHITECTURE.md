@@ -26,3 +26,7 @@ Honest capability disclosure; no surprise costs; user control; minimum data coll
 
 ## Local coding workshop
 `code-workbench.js` stores owner-authored before/after code drafts locally, validates repository-relative paths, previews a readable patch and exports JSON. It does not execute untrusted code, write to GitHub or deploy. A future isolated runner and repository integration must run syntax/tests, inspect dependencies/licences, keep backups and require the single owner-controlled auto-update preference before unattended updates.
+
+
+## Federated browser research
+`research-engine.js` queries five public indexes directly from the browser: Wikipedia, Crossref, OpenAlex, GitHub repository search and Stack Exchange/Stack Overflow. It normalizes, deduplicates and ranks results, reports per-provider failures, and keeps partial results when one provider is unavailable. Users can open original sources or save result notes into the local research notebook. No API key or paid provider is required. These indexes do not cover the entire web; broader search engines remain available as external search links. Source claims must be checked at origin. Public APIs may rate-limit or change their CORS policies.
