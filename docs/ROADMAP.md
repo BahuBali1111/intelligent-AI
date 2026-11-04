@@ -45,9 +45,9 @@
 - [ ] Device/session management and audit logs
 
 ## Phase 4 — Controlled improvement
-- [ ] Capability registry and gap analysis
+- [x] Local capability registry and gap analysis
 - [ ] Trusted-source update discovery
-- [ ] Proposal with risk and effort estimates (no paid services assumed)
+- [x] Local improvement proposal ledger with risk labels and audit trail
 - [ ] Isolated code generation and automated tests
 - [ ] Protected branch and pull-request workflow
 - [ ] Explicit approval, staged deploy and rollback
