@@ -30,3 +30,7 @@ Honest capability disclosure; no surprise costs; user control; minimum data coll
 
 ## Federated browser research
 `research-engine.js` queries five public indexes directly from the browser: Wikipedia, Crossref, OpenAlex, GitHub repository search and Stack Exchange/Stack Overflow. It normalizes, deduplicates and ranks results, reports per-provider failures, and keeps partial results when one provider is unavailable. Users can open original sources or save result notes into the local research notebook. No API key or paid provider is required. These indexes do not cover the entire web; broader search engines remain available as external search links. Source claims must be checked at origin. Public APIs may rate-limit or change their CORS policies.
+
+
+## Conversation continuity engine
+`context-engine.js` keeps a local index of recent user instructions and a transparent set of confirmed Intelligent AI project rules. It supports keyword retrieval, bounded local history, common-secret redaction, export and clearing the recent index. The confirmed rules are versioned in source; recent user instructions remain in the current browser only. This is continuity support, not a language model: it does not understand every nuance or synchronize across devices. The app must continue to be honest about those limits.
