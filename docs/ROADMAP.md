@@ -34,7 +34,7 @@
 - [x] Local searchable knowledge library with categories, tags, ranked retrieval, delete and JSON backup
 - [ ] File upload and document/data analysis using free libraries
 - [x] Multi-source browser research links and local source notebook; automatic page ingestion remains a later connector task
-- [ ] Isolated coding workspace
+- [x] Local code change workbench with before/after drafts, patch preview and JSON export (no direct repository writes yet)
 - [ ] Planner and specialist agent orchestration
 - [ ] Optional local voice and image understanding where device capability permits
 
