@@ -23,6 +23,11 @@ Open `index.html` for a basic preview. Service-worker/PWA features require HTTPS
 - [Architecture](docs/ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Self-update design](docs/SELF-UPDATE.md)
+- [Self-improvement modes](docs/SELF-UPDATE-MODES.md)
+- [Security policy](SECURITY.md)
+
+## Automated checks and deployment
+GitHub Actions workflows are included for static quality checks and GitHub Pages deployment. To publish, enable **Settings → Pages → Build and deployment → Source: GitHub Actions**. The first successful Pages deployment will provide the public site URL.
 
 ## Safety principles
 Honest capability reporting · user control · privacy · least privilege · reviewed updates · backups and rollback. Never put API keys or private tokens in browser files.
