@@ -1,6 +1,6 @@
 (function(root){"use strict";
 const KEY="ia-knowledge-v1",MAX_DOCS=300,MAX_CHARS=12000,STOP=new Set(["the","and","for","with","that","this","from","your","you","are","was","have","has","करें","है","हैं","और","का","की","के","को","में","से","यह","वह","एक"]);
-function terms(text){return String(text||"").toLocaleLowerCase().normalize("NFKC").match(/[\p{L}\p{N}]{2,}/gu)||[]}
+function terms(text){return String(text||"").toLocaleLowerCase().normalize("NFKC").match(/[\p{L}\p{M}\p{N}]{2,}/gu)||[]}
 function createKnowledgeStore(storage,key){if(!storage||typeof storage.getItem!=="function"||typeof storage.setItem!=="function")throw new TypeError("Compatible storage is required.");const storeKey=key||KEY;
 function read(){try{const x=JSON.parse(storage.getItem(storeKey)||"[]");return Array.isArray(x)?x.filter(d=>d&&typeof d.id==="string"&&typeof d.title==="string"&&typeof d.content==="string").slice(-MAX_DOCS):[]}catch{return []}}
 function write(docs){storage.setItem(storeKey,JSON.stringify(docs.slice(-MAX_DOCS)));return docs}
