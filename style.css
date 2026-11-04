@@ -11,3 +11,10 @@
 .messages .assistant-message{align-self:flex-start;background:linear-gradient(145deg,#17243a,#101a2d);border:1px solid #34435f;border-bottom-left-radius:5px;text-align:left}
 .messages .assistant-message b{color:#78dce8}
 .messages .empty-state{align-self:center;color:var(--muted);font-size:12px}
+
+/* v0.3.1: harden two-sided chat alignment on narrow mobile screens */
+#messages.messages{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:14px!important;width:100%;max-width:780px;margin:20px auto}
+#messages.messages>article.message{display:block!important;box-sizing:border-box!important;width:auto!important;max-width:82%!important;min-width:0!important;flex:0 1 auto!important;padding:16px!important}
+#messages.messages>article.user-message{align-self:flex-end!important;margin-left:auto!important;margin-right:0!important;background:linear-gradient(135deg,#433875,#1b3150)!important;border:1px solid #7663bb!important;border-radius:18px 18px 5px 18px!important}
+#messages.messages>article.assistant-message{align-self:flex-start!important;margin-left:0!important;margin-right:auto!important;background:linear-gradient(145deg,#17243a,#101a2d)!important;border:1px solid #34435f!important;border-radius:18px 18px 18px 5px!important}
+#messages.messages>article.message>p{margin:0!important;white-space:pre-wrap;overflow-wrap:anywhere}
