@@ -1,77 +1,30 @@
-# Secure AI Gateway — Implementation Plan
+# Model Runtime — No Paid API Policy
 
-## Purpose
-The public GitHub Pages site is only the user interface. A real model must be called through a private server-side gateway so provider credentials never reach the browser.
+## Owner's decision
+Intelligent AI is to be built with our own application code. Do not integrate paid AI APIs, paid model subscriptions, billing accounts or services that can unexpectedly charge money.
 
-## Request contract
-The browser will eventually send a same-origin HTTPS request:
+## Important technical distinction
+We can write our own chat interface, orchestration, intent routing, memory controls, tools, retrieval, permissions and agent workflow. These components are application software. Natural-language generation at a strong level also needs trained model weights and compute; writing JavaScript/Python application code alone does not create a ChatGPT-class trained model.
 
-`POST /api/chat`
+## Allowed direction
+1. Build a modular internal model-runtime interface with no vendor dependency.
+2. Develop and test the application engine independently of any external model.
+3. Investigate free/open-source model weights and local/self-hosted runtimes. Check model licenses and hardware requirements before adopting.
+4. Prefer running on hardware already available to the owner, where feasible.
+5. If a local model cannot run yet, use a clearly labelled mock adapter for development. Never represent mock responses as real intelligence.
+6. Do not fall back to a paid provider automatically.
 
-Example request:
-```json
-{
-  "conversation_id": "client-generated-or-server-issued-id",
-  "messages": [
-    { "role": "user", "content": "Explain this topic simply." }
-  ],
-  "language": "hi"
-}
-```
+## Prohibited without a new explicit owner decision
+- Paid model APIs or subscriptions.
+- Paid hosting, databases, search APIs or other metered services.
+- Adding payment methods or billing credentials.
+- Sending private conversations to an external model provider.
 
-The server validates the request, applies authentication and rate limits, checks message size, selects an approved model, and calls the configured provider using a server-side secret.
-
-## Response contract
-The first version should return a predictable response:
-
-```json
-{
-  "message": {
-    "role": "assistant",
-    "content": "Model response text"
-  },
-  "usage": {
-    "input_tokens": 0,
-    "output_tokens": 0
-  },
-  "model": "provider/model-id"
-}
-```
-
-Token counts and model identifiers are supplied only when the provider returns them. Streaming can be added after the basic request/response path is tested.
-
-## Required server controls
-- Keep provider API keys in the backend host's encrypted environment variables.
-- Never put keys in `app.js`, HTML, CSS, public repository files, or browser storage.
-- Validate roles and payload size; reject unsupported fields.
-- Add per-user/IP rate limits and a configurable spending ceiling.
-- Set request timeouts and safe error messages; do not expose stack traces or secrets.
-- Log operational metadata without storing full private prompts by default.
-- Keep provider adapters modular so the model vendor can be changed without redesigning the chat UI.
-- Require authentication before enabling persistent cross-device history.
-- Add tests for validation, provider failures, rate limiting and secret redaction.
-
-## Deployment shape
-```
-Mobile/Desktop browser
-       |
-       | HTTPS /api/chat (no provider key)
-       v
-Private backend / serverless function
-       |
-       +-- authentication + rate limits
-       +-- request validation + usage budget
-       +-- provider adapter (secret stays here)
-       |
-       v
-Approved AI model provider
-```
+## Security requirements
+- Keep any future local runtime behind a server-side interface; never expose privileged credentials in browser code.
+- Validate messages, set resource limits, and isolate tools.
+- Keep user approval for sensitive actions, repository writes and deployments.
+- Clearly display whether the runtime is local, unavailable, or a development mock.
 
 ## Current status
-This document defines the planned contract only. No backend endpoint or live model is connected yet. The static GitHub Pages site cannot safely hold provider secrets or execute private server-side model calls.
-
-## Owner decisions needed before live activation
-1. Select the initial model provider and model.
-2. Agree a monthly spending cap and per-user limits.
-3. Choose a backend host for this project (separate from the Savarkundla Ride and Worker Network projects).
-4. Add the provider key directly to that host's secret/environment settings; never paste it into chat or commit it to GitHub.
+This document is the implementation policy. The current GitHub Pages application is still a static frontend demo; no real model runtime is connected.
