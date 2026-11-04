@@ -1,37 +1,52 @@
 # Intelligent AI Roadmap
 
-## Phase 0 — Foundation (current)
+## Build philosophy
+- Build the application, orchestration, memory controls, tools and user experience with our own code.
+- Do not add paid APIs, paid model subscriptions, payment gateways or surprise charges.
+- Prefer local execution and free/open-source components with licenses checked before adoption.
+- Do not pretend ordinary application code alone is a trained language model. Strong language intelligence requires model weights; first investigate a small open model that can run locally or on genuinely free available compute.
+- If no suitable free runtime is available, continue building and testing the complete engine with a clearly labelled mock adapter until a free model can be run. Never silently switch to a paid service.
+- Any future cost-bearing service requires the owner's explicit decision first.
+
+## Phase 0 — Foundation (complete)
 - [x] Separate GitHub repository
 - [x] Responsive desktop/mobile interface
-- [x] PWA manifest and basic service worker
+- [x] PWA manifest and basic offline app-shell caching
 - [x] Demo chat and capability overview
+- [x] Two-sided chat bubbles, local chat history and export
 - [x] Self-update control prototype and safety design
-- [x] Architecture and roadmap documents
+- [x] Architecture, security and gateway plan documents
+- [x] GitHub Pages deployment and static quality checks
 
-## Phase 1 — Working AI
-- [ ] Choose model provider(s) and budget limits
-- [ ] Secure server-side model gateway
-- [ ] Streaming chat and conversation export
-- [ ] Hindi/English tests; Gujarati support
-- [ ] Usage and cost display
+## Phase 1 — Build our own AI application engine (next)
+- [ ] Define a provider-free internal model adapter interface
+- [ ] Build conversation/session manager and message validation
+- [ ] Build intent router and task planner modules
+- [ ] Build a permissioned tool registry and tool-result format
+- [ ] Build local settings, language handling and capability status
+- [ ] Add tests for every module
+- [ ] Evaluate free/open-source models for local execution; verify device/server requirements and licenses
+- [ ] Connect only a model that can run without a paid API; otherwise keep the adapter clearly marked as not connected
+- [ ] Add streaming UI once a free local runtime is selected
 
-## Phase 2 — Tools and agents
-- [ ] Web research with citations
-- [ ] File upload and document/data analysis
+## Phase 2 — Free/local tools
+- [ ] Local knowledge and document processing
+- [ ] File upload and document/data analysis using free libraries
+- [ ] Web research only through suitable free/public sources, respecting their terms and limits
 - [ ] Isolated coding workspace
 - [ ] Planner and specialist agent orchestration
-- [ ] Optional voice and image understanding
+- [ ] Optional local voice and image understanding where device capability permits
 
 ## Phase 3 — Accounts and memory
-- [ ] Authentication and recovery
-- [ ] Database with access controls
+- [ ] Authentication and recovery using a free/self-hostable approach where practical
+- [ ] Database with access controls and a clear storage plan
 - [ ] User-controlled memory, export and deletion
 - [ ] Device/session management and audit logs
 
 ## Phase 4 — Controlled improvement
 - [ ] Capability registry and gap analysis
 - [ ] Trusted-source update discovery
-- [ ] Proposal with risk/time/cost estimates
+- [ ] Proposal with risk and effort estimates (no paid services assumed)
 - [ ] Isolated code generation and automated tests
 - [ ] Protected branch and pull-request workflow
 - [ ] Explicit approval, staged deploy and rollback
@@ -39,5 +54,5 @@
 ## Phase 5 — Reliability and scale
 - [ ] Monitoring, backups and incident response
 - [ ] Accessibility, performance and security review
-- [ ] Provider portability and model evaluation
+- [ ] Model portability and evaluation
 - [ ] Mobile install and release readiness
