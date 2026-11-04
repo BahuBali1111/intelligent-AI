@@ -2,7 +2,7 @@
   "use strict";
   const MAX_MESSAGE_CHARS=8000;
   const INTENTS={
-    research:{label:"research",keywords:["research","search","source","internet","रिसर्च","खोज","जानकारी","स्रोत"]},
+    research:{label:"research",keywords:["research","search","find","look up","latest","source","internet","रिसर्च","खोज","खोजो","ढूंढ","ढूँढ","जानकारी","स्रोत"]},
     coding:{label:"coding",keywords:["code","coding","program","bug","debug","website","app","कोड","प्रोग्राम","ऐप","वेबसाइट","गलती"]},
     files:{label:"files",keywords:["file","pdf","document","excel","sheet","upload","फाइल","दस्तावेज","पीडीएफ","एक्सेल"]},
     planning:{label:"planning",keywords:["plan","steps","roadmap","improve","build","योजना","कदम","आगे","बनाओ","सुधार"]},
