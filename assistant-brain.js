@@ -51,8 +51,6 @@ function buildReply(analysis,options){
  else if(o.capabilityNote)lines.push(o.capabilityNote);
  else if(analysis.intent!=="research")lines.push(hi?"यह शुरुआती नियम-आधारित समझ है; जटिल भाषा और गहरे तर्क के लिए असली भाषा मॉडल जोड़ना बाकी है।":"This is early rule-based understanding; a real language model is still needed for nuanced language and deeper reasoning.");
  if(steps.length)lines.push((hi?"काम के चरण:\n":"Work steps:\n")+steps.map((x,i)=>(i+1)+". "+x).join("\n"));
- return lines.join("
-
-");
+ return lines.join("\\n\\n");
 }
 const api={understand,buildReply,detectLanguage,tokens};if(typeof module!=="undefined"&&module.exports)module.exports=api;root.IntelligentBrain=api})(typeof globalThis!=="undefined"?globalThis:this);
