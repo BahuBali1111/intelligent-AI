@@ -59,3 +59,26 @@ Add a browser-safe authenticated session mechanism before enabling the chat UI
 to call this endpoint from a public website. A static site cannot safely hide a
 shared bearer key. Until that is built, the bridge should be tested locally
 or on a private network only.
+
+
+## Frontend connection controls
+
+The Settings page now has a private runtime connection form. Enter the HTTPS
+base URL and the server's `IA_API_KEY` value there. The browser first checks
+`GET /health`, then sends chat requests to `/v1/chat/completions`.
+
+The access key is held in JavaScript memory for the current page session only:
+it is not written to localStorage, chat history, or repository files. Reloading
+the page clears it. This is intended for the owner operating their own private
+runtime, not as a public multi-user authentication system. Do not enter the key
+on shared devices.
+
+For the GitHub Pages site, set `IA_ALLOWED_ORIGINS` to the exact origin shown
+in the browser address bar (origin only, no path), and use a valid HTTPS
+endpoint. A CORS failure usually means the website origin is not in that
+allow-list. CORS is not authentication; Bearer-key authentication remains
+required.
+
+The chat keeps its existing local research branch. Other chat messages are sent
+to Qwen only after the connection status succeeds. If no runtime is connected,
+the app continues to label its deterministic response as a prototype.
