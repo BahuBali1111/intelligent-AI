@@ -18,7 +18,7 @@ jobs:
       - name: Check required application files
         run: |
           set -eu
-          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js knowledge.js update-engine.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js; do
+          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js knowledge.js update-engine.js research-desk.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-desk.test.js; do
             test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
           done
       - name: Validate JavaScript syntax
@@ -32,6 +32,7 @@ jobs:
           node --check memory.js
           node --check knowledge.js
           node --check update-engine.js
+          node --check research-desk.js
           node --test tests/core.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js
       - name: Validate JSON manifest
         run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
@@ -44,3 +45,4 @@ jobs:
           grep -q 'memory.js' index.html
           grep -q 'knowledge.js' index.html
           grep -q 'update-engine.js' index.html
+          grep -q 'research-desk.js' index.html
