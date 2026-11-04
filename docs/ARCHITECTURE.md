@@ -22,3 +22,7 @@ GitHub repository → GitHub Pages static frontend → separately hosted local/s
 
 ## Principles
 Honest capability disclosure; no surprise costs; user control; minimum data collection; trusted sources; reproducible versioned changes; protected secrets; reversible releases.
+
+
+## Local coding workshop
+`code-workbench.js` stores owner-authored before/after code drafts locally, validates repository-relative paths, previews a readable patch and exports JSON. It does not execute untrusted code, write to GitHub or deploy. A future isolated runner and repository integration must run syntax/tests, inspect dependencies/licences, keep backups and require the single owner-controlled auto-update preference before unattended updates.
