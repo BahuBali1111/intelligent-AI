@@ -50,3 +50,4 @@ jobs:
           grep -q 'research-desk.js' index.html
           grep -q 'research-analyzer.js' index.html
           grep -q 'code-workbench.js' index.html
+          for file in core.js memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js; do test -s "$file"; done
