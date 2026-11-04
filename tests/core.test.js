@@ -22,7 +22,7 @@ test("routes file and research requests",()=>{
   assert.equal(core.classifyIntent("इस विषय पर रिसर्च करो").name,"research");
 });
 test("creates a structured plan for a task",()=>{
-  const plan=core.createPlan("Help me build an app");
+  const plan=core.createPlan("Write code for an app");
   assert.equal(plan.intent,"coding");
   assert.ok(plan.steps.length>=3);
 });
