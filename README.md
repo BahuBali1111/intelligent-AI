@@ -21,6 +21,7 @@ Open `index.html` for a basic preview. Service-worker/PWA features require HTTPS
 ## Project documents
 - [Product vision and agreed requirements](docs/PROJECT-VISION.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Secure AI gateway plan](docs/AI-GATEWAY.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Self-update design](docs/SELF-UPDATE.md)
 - [Self-improvement modes](docs/SELF-UPDATE-MODES.md)
