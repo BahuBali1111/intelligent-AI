@@ -29,7 +29,8 @@ jobs:
         run: |
           node --check app.js
           node --check core.js
-          node --check memory.js\n          node --check knowledge.js
+          node --check memory.js
+          node --check knowledge.js
           node --test tests/core.test.js tests/memory.test.js tests/knowledge.test.js
       - name: Validate JSON manifest
         run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
@@ -39,4 +40,5 @@ jobs:
           grep -Eq 'src="\./app\.js(\?[^\"]*)?"' index.html
           grep -q 'rel="manifest"' index.html
           grep -q 'serviceWorker.register' app.js
-          grep -q 'memory.js' index.html\n          grep -q 'knowledge.js' index.html
+          grep -q 'memory.js' index.html
+          grep -q 'knowledge.js' index.html
