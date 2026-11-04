@@ -39,3 +39,5 @@
 .research-link-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:14px 0}.research-link{display:block;padding:13px;border:1px solid var(--line);border-radius:12px;background:#151f34;color:var(--cyan);text-decoration:none}.research-link:hover{border-color:var(--cyan)}#researchSourceForm input{width:100%;background:#0d1527;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px}
 
 #researchAnalysis .memory-item{line-height:1.6}#researchProposal{width:100%;margin:10px 0}.memory-item p{overflow-wrap:anywhere}
+
+#codeDraftForm input{width:100%;background:#0d1527;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px}#codeDraftForm textarea{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;line-height:1.5}.code-diff{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;padding:12px;border-radius:10px;background:#080d18;border:1px solid var(--line);font-size:12px;color:var(--text)}
