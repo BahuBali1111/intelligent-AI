@@ -19,7 +19,7 @@
 - [x] GitHub Pages deployment and static quality checks
 
 ## Phase 1 — Build our own AI application engine (in progress)
-- [x] Add a local conversation continuity engine with confirmed project rules, recent-instruction indexing, privacy redaction and export\n- [x] Add bilingual deterministic request understanding, intent/constraint extraction, response planning and tests\n- [ ] Define a provider-free internal model adapter interface
+- [x] Add a local conversation continuity engine with confirmed project rules, recent-instruction indexing, privacy redaction and export\n- [x] Add bilingual deterministic request understanding, intent/constraint extraction, response planning and tests\n- [x] Define a provider-free internal model adapter interface
 - [x] Build initial message validation and local conversation history
 - [x] Build explicit user-controlled local memory notes with search, delete and export
 - [x] Build intent router and task planner modules
