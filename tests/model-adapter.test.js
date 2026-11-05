@@ -6,7 +6,7 @@ test("creates a provider-neutral adapter and normalizes replies",async()=>{
  let connected=true;
  const adapter=adapters.createAdapter({name:"test-provider",capabilities:["chat","streaming"],connect:async()=>({ok:true}),disconnect:()=>{connected=false},isConnected:()=>connected,chat:async messages=>({text:"  Hello  ",model:"demo-1",usage:{total_tokens:3},metadata:{trace:"x"}})});
  assert.equal(adapter.name,"test-provider");
- assert.deepEqual(await adapter.chat([{role:"user",content:"Hi"}]),{text:"Hello",provider:"test-provider",model:"demo-1",usage:{total_tokens:3},finishReason:null,metadata:{trace:"x"}});
+ assert.deepEqual(await adapter.chat([{role:"user",content:"Hi"}]),{text:"Hello",provider:"test-provider",model:"demo-1",usage:{total_tokens:3},finishReason:null,metadata:{trace:"x"},runtimeSeconds:null});
  adapter.disconnect();
  assert.equal(adapter.isConnected(),false);
  await assert.rejects(()=>adapter.chat([{role:"user",content:"Hi"}]),/Connect a model provider/);
