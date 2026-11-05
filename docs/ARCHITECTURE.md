@@ -49,3 +49,7 @@ Honest capability disclosure; no surprise costs; user control; minimum data coll
 
 ## Provider adapter integration
 The existing OpenRouter/Qwen browser client is now wrapped by the provider-neutral `model-adapter.js` contract. The app continues using a compatibility facade, while connection, status and chat calls route through the registered `openrouter-qwen` adapter. This is an incremental migration: credentials remain browser-side/session-only for this prototype and must move behind a trusted server-side gateway before production.
+
+
+## Permissioned tool execution
+The core tool registry exposes metadata only; executable functions remain private. Every invocation returns a normalized envelope with success state, tool name, request ID, timestamp, duration, data or a bounded error. Optional input validators run before tools. High and critical risk tools require `context.approved === true`; unknown tools, invalid inputs and thrown errors become safe failure envelopes. This browser prototype still does not provide a trusted owner-approval identity or authorize external side effects by itself.
