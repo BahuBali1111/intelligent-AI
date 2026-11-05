@@ -48,3 +48,30 @@ test("requires explicit approval for critical tools even when requested",async()
   core.registerTool({name:"test.critical",risk:"critical",run:async()=>true});
   await assert.rejects(()=>core.runTool("test.critical",{}, {approved:"yes"}),error=>error.code==="OWNER_APPROVAL_REQUIRED");
 });
+
+test("uses assistant intent to build matching explain and memory plans",()=>{
+  const previous=global.IntelligentBrain;
+  global.IntelligentBrain={understand:()=>({intent:"explain",confidence:0.9,language:"en"})};
+  try{
+    const request=core.prepareRequest("What is a neural network?");
+    assert.equal(request.analysis.intent,"explain");
+    assert.equal(request.plan.intent,"explain");
+    assert.match(request.plan.steps[0],/concept/i);
+  }finally{
+    if(previous===undefined)delete global.IntelligentBrain;
+    else global.IntelligentBrain=previous;
+  }
+});
+
+test("creates a memory plan when the assistant classifies a recall request",()=>{
+  const previous=global.IntelligentBrain;
+  global.IntelligentBrain={understand:()=>({intent:"memory",confidence:0.9,language:"en"})};
+  try{
+    const request=core.prepareRequest("Recall the earlier instruction");
+    assert.equal(request.plan.intent,"memory");
+    assert.match(request.plan.steps[0],/Search available/i);
+  }finally{
+    if(previous===undefined)delete global.IntelligentBrain;
+    else global.IntelligentBrain=previous;
+  }
+});
