@@ -27,7 +27,7 @@ jobs:
       - name: Prepare static site
         run: |
           mkdir -p _site
-          cp index.html style.css app.js core.js memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js research-engine.js context-engine.js assistant-brain.js integrations.js model-client.js manifest.json service-worker.js icon.svg _site/
+          cp index.html style.css app.js core.js memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js research-engine.js context-engine.js assistant-brain.js integrations.js navigation-fallback.js model-client.js manifest.json service-worker.js icon.svg _site/
           cp -r docs _site/docs
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
