@@ -42,3 +42,7 @@ Honest capability disclosure; no surprise costs; user control; minimum data coll
 
 ## Provider-neutral model adapter
 `model-adapter.js` defines a provider-independent contract for connect, disconnect, connection state and chat. It validates message roles/content, normalizes model responses and maintains a registry that exposes only safe provider metadata. Provider implementations can be swapped without changing orchestration code. The current OpenRouter/Qwen client is not yet migrated to this contract; this milestone establishes and tests the interface only.
+
+
+## Provider adapter integration
+The existing OpenRouter/Qwen browser client is now wrapped by the provider-neutral `model-adapter.js` contract. The app continues using a compatibility facade, while connection, status and chat calls route through the registered `openrouter-qwen` adapter. This is an incremental migration: credentials remain browser-side/session-only for this prototype and must move behind a trusted server-side gateway before production.
