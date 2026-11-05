@@ -59,16 +59,32 @@ async function chat(messages,options){
   if(data&&typeof data.output_text==="string")return data.output_text.trim();
   return "";
  }
- let data,answer="";
+ let lastDiagnostic="";
  for(let attempt=0;attempt<2;attempt++){
-  const response=await fetch(endpoint,{method:"POST",headers,body:JSON.stringify({model,messages,max_tokens:(options&&options.maxTokens)||512,temperature:attempt===0?0.2:0.35}),cache:"no-store"});
-  if(!response.ok){let detail="HTTP "+response.status;try{const body=await response.json();detail=(body.error&&body.error.message)||body.detail||detail}catch{}throw new Error(detail)}
-  data=await response.json();
-  answer=extractText(data);
-  if(answer)break;
+  const controller=typeof AbortController!=="undefined"?new AbortController():null;
+  const timer=controller?setTimeout(()=>controller.abort(),45000):null;
+  try{
+   const response=await fetch(endpoint,{method:"POST",headers,body:JSON.stringify({model,messages,max_tokens:(options&&options.maxTokens)||768,temperature:attempt===0?0.2:0.1}),cache:"no-store",signal:controller?controller.signal:undefined});
+   const raw=await response.text();
+   let data={};
+   try{data=raw?JSON.parse(raw):{}}catch{throw new Error("AI provider returned invalid JSON (HTTP "+response.status+").")}
+   if(!response.ok){
+    const detail=(data.error&&data.error.message)||data.detail||data.message||("HTTP "+response.status);
+    if(attempt===0&&(response.status===429||response.status>=500)){lastDiagnostic=detail;await new Promise(resolve=>setTimeout(resolve,900));continue;}
+    throw new Error(detail+" (HTTP "+response.status+")");
+   }
+   const answer=extractText(data);
+   if(answer)return {text:answer,usage:data.usage||null,model:data.model||getModel(),runtimeSeconds:data.runtime_seconds||null,finishReason:data.choices&&data.choices[0]&&data.choices[0].finish_reason||null};
+   const choice=data.choices&&data.choices[0]||{};
+   lastDiagnostic="HTTP 200 but empty message content"+(choice.finish_reason?"; finish_reason="+choice.finish_reason:"")+(data.model?"; model="+data.model:"");
+   if(attempt===0){await new Promise(resolve=>setTimeout(resolve,700));continue;}
+  }catch(error){
+   if(controller&&controller.signal.aborted)lastDiagnostic="Request timed out after 45 seconds.";
+   else lastDiagnostic=String(error&&error.message||error);
+   if(attempt===0&&!(controller&&controller.signal.aborted)){await new Promise(resolve=>setTimeout(resolve,700));continue;}
+  }finally{if(timer)clearTimeout(timer);}
  }
- if(!answer)throw new Error("The AI provider returned no readable text after one retry. Please try again; no GitHub change was made.");
- return {text:answer,usage:data.usage||null,model:data.model||getModel(),runtimeSeconds:data.runtime_seconds||null};
+ throw new Error("AI जवाब नहीं मिला। कारण: "+lastDiagnostic+". Settings में OpenRouter/Qwen कनेक्शन जाँचें; API key दोबारा चैट में न भेजें।");
 }
 root.IntelligentModelClient={connect,disconnect,isConnected,getModel,chat};
 })(typeof globalThis!=="undefined"?globalThis:this);
