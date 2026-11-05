@@ -11,6 +11,7 @@ function showTab(id){
  return true;
 }
 document.addEventListener("click",function(event){
+ if(window.__INTELLIGENT_APP_READY__)return;
  const menu=event.target.closest("#menu");
  if(menu){document.querySelector(".layout")?.classList.toggle("menu-open");return;}
  const nav=event.target.closest("nav button[data-tab]");
@@ -19,6 +20,7 @@ document.addEventListener("click",function(event){
  if(prompt){const chat=document.getElementById("chat");showTab("chat");const input=document.getElementById("input");if(input){input.value=prompt.dataset.prompt;input.focus();}}
 });
 document.addEventListener("submit",function(event){
+ if(window.__INTELLIGENT_APP_READY__)return;
  if(event.target.id!=="form"||event.defaultPrevented)return;
  event.preventDefault();
  const input=document.getElementById("input"),messages=document.getElementById("messages");
