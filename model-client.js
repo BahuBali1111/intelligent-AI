@@ -19,7 +19,16 @@ async function connect(baseUrl,apiKey){
  if(!health.ok)throw new Error("Runtime health check failed: HTTP "+health.status);
  const data=await health.json();
  if(data.status!=="ok")throw new Error("Model runtime is not ready yet.");
- // Do not send a test chat during connection. The supplied key is used on the first real chat request.
+ // Verify the key with a lightweight authenticated endpoint; do not run model inference.
+ const auth=await fetch(base+"/auth/check",{
+  method:"GET",
+  headers:{Accept:"application/json",Authorization:"Bearer "+apiKey.trim()},
+  cache:"no-store"
+ });
+ if(auth.status===401)throw new Error("API key rejected by the Qwen server (HTTP 401).");
+ if(!auth.ok)throw new Error("Authentication check failed: HTTP "+auth.status+". Ensure the Kaggle server has the /auth/check endpoint.");
+ const authData=await auth.json();
+ if(authData.status!=="ok"||authData.authenticated!==true)throw new Error("The server did not confirm this API key.");
  config={baseUrl:base,apiKey:apiKey.trim(),connected:true,model:data.model||"Qwen3.5-9B"};
  return {model:config.model};
 }
