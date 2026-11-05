@@ -8,17 +8,17 @@ if(disconnectChannel)disconnectChannel.onmessage=event=>{
   root.dispatchEvent(new Event("ia-model-disconnected"));
  }
 };
-function cleanBase(value){return String(value||"").trim().replace(/\\/+$/,"")}
+function cleanBase(value){let s=String(value||"").trim();while(s.endsWith("/"))s=s.slice(0,-1);return s}
 function isOpenRouter(base){try{return new URL(base).hostname==="openrouter.ai"}catch{return false}}
 async function connect(baseUrl,apiKey){
  config={baseUrl:"",apiKey:"",connected:false,provider:"",model:""};
  let base=cleanBase(baseUrl),key=String(apiKey||"").trim();
- if(!/^https?:\\/\\//i.test(base))throw new Error("URL must begin with https://.");
+ if(!(base.startsWith("https://")||base.startsWith("http://")))throw new Error("URL must begin with https://.");
  if(!key)throw new Error("Enter your API key.");
  if(isOpenRouter(base)){
   const url=new URL(base);
   if(url.pathname==="/"||url.pathname==="")base="https://openrouter.ai/api/v1";
-  else if(url.pathname.replace(/\\/+$/,"")==="/api")base="https://openrouter.ai/api/v1";
+  else if(url.pathname==="/api")base="https://openrouter.ai/api/v1";
   const check=await fetch(base+"/models",{method:"GET",headers:{Accept:"application/json",Authorization:"Bearer "+key},cache:"no-store"});
   if(!check.ok)throw new Error(check.status===401?"OpenRouter API key rejected (HTTP 401).":"OpenRouter key check failed: HTTP "+check.status);
   const data=await check.json();
