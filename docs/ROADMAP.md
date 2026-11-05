@@ -20,6 +20,7 @@
 
 ## Phase 1 — Build our own AI application engine (in progress)
 - [x] Add a local conversation continuity engine with confirmed project rules, recent-instruction indexing, privacy redaction and export\n- [x] Add bilingual deterministic request understanding, intent/constraint extraction, response planning and tests\n- [x] Define a provider-free internal model adapter interface
+- [x] Migrate the current OpenRouter/Qwen client behind the provider-neutral adapter
 - [x] Build initial message validation and local conversation history
 - [x] Build explicit user-controlled local memory notes with search, delete and export
 - [x] Build intent router and task planner modules
