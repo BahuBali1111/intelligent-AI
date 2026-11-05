@@ -93,9 +93,9 @@ function prepareResearch(){try{activeResearchQuery=$("#researchQuery").value.tri
 function saveResearchSource(e){e.preventDefault();try{researchDesk.saveSource({query:activeResearchQuery,title:$("#researchSourceTitle").value,url:$("#researchUrl").value,notes:$("#researchNotes").value});$("#researchSourceForm").reset();$("#researchStatus").textContent=words[lang].researchSaved;renderResearchNotebook()}catch(err){$("#researchStatus").textContent=err.message}}
 function exportResearch(){const blob=new Blob([researchDesk.exportData()],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="intelligent-ai-research-notebook.json";a.click();URL.revokeObjectURL(url)}
 
-const integrationRegistry=window.IntelligentIntegrations.createRegistry(localStorage);
+const integrationRegistry=window.IntelligentIntegrations&&typeof window.IntelligentIntegrations.createRegistry==="function"?window.IntelligentIntegrations.createRegistry(localStorage):null;
 function renderIntegrations(){
- const root=$("#integrationList");if(!root)return;root.replaceChildren();
+ const root=$("#integrationList");if(!root)return;root.replaceChildren();if(!integrationRegistry){const warning=document.createElement("p");warning.textContent="Integration catalogue is temporarily unavailable. Other app features remain usable.";root.append(warning);return;}
  const names={available:"Available · not connected", "user-configured":"User configured",prototype:"Prototype",planned:"Planned",connected:"Connected",paused:"Paused",error:"Needs attention"};
  for(const item of integrationRegistry.list()){
   const card=document.createElement("article"),title=document.createElement("b"),purpose=document.createElement("p"),meta=document.createElement("small"),permissions=document.createElement("small"),next=document.createElement("p");
