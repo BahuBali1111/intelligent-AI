@@ -11,7 +11,7 @@ function normalizeMessages(messages){
 function normalizeResult(result,provider){
  if(typeof result==="string")return {text:result.trim(),provider,model:"",usage:null,finishReason:null};
  if(!result||typeof result.text!=="string"||!result.text.trim())throw new Error("Model adapter returned an empty or invalid response.");
- return {text:result.text.trim(),provider:result.provider||provider,model:result.model||"",usage:result.usage||null,finishReason:result.finishReason||null,metadata:result.metadata||null};
+ return {text:result.text.trim(),provider:result.provider||provider,model:result.model||"",usage:result.usage||null,finishReason:result.finishReason||null,metadata:result.metadata||null,runtimeSeconds:result.runtimeSeconds||null};
 }
 function createAdapter(definition){
  if(!definition||typeof definition.name!=="string"||!definition.name.trim())throw new TypeError("Adapter needs a provider name.");
