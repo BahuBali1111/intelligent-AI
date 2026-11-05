@@ -6,6 +6,9 @@ Responsive static frontend and PWA shell. The chat UI stores demo conversation h
 ## Build policy
 Build the application engine and tools with our own code. Do not add paid APIs, subscriptions, metered hosting or paid services without a new explicit owner decision. Prefer local/free/open-source components after license and hardware checks. Application code is not itself a trained language model: real language generation requires model weights and compute. Do not label mock responses as real AI.
 
+## External integration status
+A local integration catalogue records intended services, current status, minimum permissions, cost policy and credential handling. It is metadata only: GitHub is not yet connected to the browser runtime. A secure server-side broker and repository-scoped GitHub App are required before repository updates can be requested from the app.
+
 ## Planned modular architecture
 1. Experience: accessible desktop/mobile web UI, English/Hindi first, Gujarati next.
 2. Conversation core: message validation, session state, context window and history controls.
