@@ -64,7 +64,7 @@ async function chat(messages,options){
   const controller=typeof AbortController!=="undefined"?new AbortController():null;
   const timer=controller?setTimeout(()=>controller.abort(),45000):null;
   try{
-   const response=await fetch(endpoint,{method:"POST",headers,body:JSON.stringify({model,messages,max_tokens:(options&&options.maxTokens)||768,temperature:attempt===0?0.2:0.1},cache:"no-store",signal:controller?controller.signal:undefined});
+   const response=await fetch(endpoint,{method:"POST",headers,body:JSON.stringify({model,messages,max_tokens:(options&&options.maxTokens)||768,temperature:attempt===0?0.2:0.1}),cache:"no-store",signal:controller?controller.signal:undefined});
    const raw=await response.text();
    let data={};
    try{data=raw?JSON.parse(raw):{}}catch{throw new Error("AI provider returned invalid JSON (HTTP "+response.status+").")}
