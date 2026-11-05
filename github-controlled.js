@@ -138,7 +138,7 @@
     }
   }
 
-  const EDITABLE_PATHS = ["assistant-brain.js","research-engine.js","update-engine.js","core.js","knowledge.js","memory.js","context-engine.js","code-workbench.js","research-analyzer.js","research-desk.js"];
+  const EDITABLE_PATHS = ["assistant-brain.js","research-engine.js","knowledge.js","memory.js","context-engine.js","code-workbench.js","research-analyzer.js","research-desk.js"];
   function decodeBase64Utf8(value) {
     const binary = atob(String(value || "").replace(/\\s/g, ""));
     const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
@@ -149,12 +149,12 @@
     if (!isConnected()) throw new Error("GitHub is not connected in this page session.");
     const files = [];
     for (const path of EDITABLE_PATHS) {
-      if (files.length >= 8) break;
+      if (files.length >= 4) break;
       try {
         const item = await api("/repos/" + OWNER + "/" + REPO + "/contents/" + path + "?ref=main");
         if (item.type !== "file" || !item.content) continue;
         const text = decodeBase64Utf8(item.content);
-        files.push({ path, sha: item.sha, size: text.length, content: text.slice(0, 14000) });
+        files.push({ path, sha: item.sha, size: text.length, content: text.slice(0, 9000) });
       } catch (error) {
         if (!String(error.message).includes("404")) throw error;
       }
