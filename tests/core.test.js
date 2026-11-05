@@ -35,7 +35,7 @@ test("registers and runs tools without exposing internal function objects",async
 test("prepares a validated request with analysis and a task plan",()=>{
   const request=core.prepareRequest("Please debug this app");
   assert.equal(request.ok,true);
-  assert.equal(request.analysis.intent,"coding");
+  assert.equal(request.analysis.name,"coding");
   assert.equal(request.plan.intent,"coding");
   assert.ok(request.requestId);
 });
