@@ -24,7 +24,7 @@
 - [x] Build initial message validation and local conversation history
 - [x] Build explicit user-controlled local memory notes with search, delete and export
 - [x] Build intent router and task planner modules
-- [ ] Build a permissioned tool registry and tool-result format
+- [x] Build a permissioned tool registry and normalized tool-result format
 - [x] Add external integration catalogue, least-privilege permissions and credential policy
 - [ ] Connect GitHub through a repository-scoped GitHub App and secure server-side token broker
 - [ ] Build local settings, language handling and capability status
