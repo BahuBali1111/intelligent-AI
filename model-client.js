@@ -6,10 +6,20 @@ async function connect(baseUrl,apiKey){
  const base=cleanBase(baseUrl);
  if(!/^https?:\/\//i.test(base))throw new Error("Server URL must begin with https:// (or http:// for local testing).");
  if(!apiKey.trim())throw new Error("Enter the private runtime access key.");
- const response=await fetch(base+"/health",{method:"GET",headers:{Accept:"application/json"},cache:"no-store"});
- if(!response.ok)throw new Error("Runtime health check failed: HTTP "+response.status);
- const data=await response.json();
+ const health=await fetch(base+"/health",{method:"GET",headers:{Accept:"application/json"},cache:"no-store"});
+ if(!health.ok)throw new Error("Runtime health check failed: HTTP "+health.status);
+ const data=await health.json();
  if(data.status!=="ok")throw new Error("Model runtime is not ready yet.");
+ const authCheck=await fetch(base+"/v1/chat/completions",{
+  method:"POST",
+  headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey.trim()},
+  body:JSON.stringify({model:"intelligent-ai-qwen",messages:[{role:"user",content:"Reply only OK."}],max_tokens:1,temperature:0}),
+  cache:"no-store"
+ });
+ if(authCheck.status===401||authCheck.status===403)throw new Error("API key rejected by the Qwen server. Copy IA_API_KEY again from the Kaggle notebook output and paste it exactly.");
+ if(!authCheck.ok)throw new Error("Authenticated model test failed: HTTP "+authCheck.status);
+ const testData=await authCheck.json();
+ if(!testData||!Array.isArray(testData.choices))throw new Error("The server accepted the key but returned an unexpected test response.");
  config={baseUrl:base,apiKey:apiKey.trim(),connected:true,model:data.model||"Qwen3.5-9B"};
  return {model:config.model};
 }
