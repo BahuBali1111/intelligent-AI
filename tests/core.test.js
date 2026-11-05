@@ -29,5 +29,22 @@ test("creates a structured plan for a task",()=>{
 test("registers and runs tools without exposing internal function objects",async()=>{
   core.registerTool({name:"test.echo",description:"Echo test",run:async value=>({value})});
   assert.deepEqual(await core.runTool("test.echo","hello"),{value:"hello"});
-  assert.deepEqual(core.listTools(),[{name:"test.echo",description:"Echo test"}]);
+  assert.deepEqual(core.listTools(),[{name:"test.echo",description:"Echo test",risk:"low",requiresApproval:false}]);
+});
+
+test("prepares a validated request with analysis and a task plan",()=>{
+  const request=core.prepareRequest("Please debug this app");
+  assert.equal(request.ok,true);
+  assert.equal(request.analysis.intent,"coding");
+  assert.equal(request.plan.intent,"coding");
+  assert.ok(request.requestId);
+});
+test("blocks high-risk tools until explicit owner approval",async()=>{
+  core.registerTool({name:"test.sensitive",description:"Sensitive test action",risk:"high",run:async()=>({changed:true})});
+  await assert.rejects(()=>core.runTool("test.sensitive",{},{}),error=>error.code==="OWNER_APPROVAL_REQUIRED");
+  assert.deepEqual(await core.runTool("test.sensitive",{},{approved:true}),{changed:true});
+});
+test("requires explicit approval for critical tools even when requested",async()=>{
+  core.registerTool({name:"test.critical",risk:"critical",run:async()=>true});
+  await assert.rejects(()=>core.runTool("test.critical",{}, {approved:"yes"}),error=>error.code==="OWNER_APPROVAL_REQUIRED");
 });
