@@ -137,6 +137,79 @@
       $("githubWriteSubmit").disabled = false;
     }
   }
+
+  const EDITABLE_PATHS = ["assistant-brain.js","research-engine.js","knowledge.js","memory.js","context-engine.js","code-workbench.js","research-analyzer.js","research-desk.js"];
+  function decodeBase64Utf8(value) {
+    const binary = atob(String(value || "").replace(/\\s/g, ""));
+    const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  }
+  function isConnected() { return connected && !!token; }
+  async function inspect() {
+    if (!isConnected()) throw new Error("GitHub is not connected in this page session.");
+    const files = [];
+    for (const path of EDITABLE_PATHS) {
+      if (files.length >= 4) break;
+      try {
+        const item = await api("/repos/" + OWNER + "/" + REPO + "/contents/" + path + "?ref=main");
+        if (item.type !== "file" || !item.content) continue;
+        const text = decodeBase64Utf8(item.content);
+        files.push({ path, sha: item.sha, size: text.length, content: text.slice(0, 9000) });
+      } catch (error) {
+        if (!String(error.message).includes("404")) throw error;
+      }
+    }
+    return { repository: OWNER + "/" + REPO, branch: "main", files };
+  }
+  async function proposePatches(patches, title, body) {
+    if (!isConnected()) throw new Error("GitHub is not connected in this page session.");
+    if (!Array.isArray(patches) || patches.length < 1 || patches.length > 5) throw new Error("A proposal must contain 1–5 small patches.");
+    const grouped = new Map();
+    for (const patch of patches) {
+      const path = safePath(String(patch.path || ""));
+      if (!EDITABLE_PATHS.includes(path)) throw new Error("This trial can edit only approved application source files; blocked: " + path);
+      if (typeof patch.find !== "string" || !patch.find.trim() || typeof patch.replace !== "string") throw new Error("Each patch needs exact find and replace text.");
+      const list = grouped.get(path) || [];
+      list.push(patch);
+      grouped.set(path, list);
+    }
+    const changes = [];
+    for (const [path, list] of grouped) {
+      const current = await api("/repos/" + OWNER + "/" + REPO + "/contents/" + path + "?ref=main");
+      if (!current.content) throw new Error("Could not read current file: " + path);
+      let text = decodeBase64Utf8(current.content);
+      for (const patch of list) {
+        const first = text.indexOf(patch.find);
+        if (first < 0 || text.indexOf(patch.find, first + patch.find.length) >= 0) {
+          throw new Error("Patch anchor must occur exactly once in " + path + ". No repository changes were made.");
+        }
+        text = text.slice(0, first) + patch.replace + text.slice(first + patch.find.length);
+      }
+      changes.push({ path, sha: current.sha, content: text });
+    }
+    const base = await api("/repos/" + OWNER + "/" + REPO + "/git/ref/heads/main");
+    const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\\.\\d{3}Z$/, "Z").toLowerCase();
+    const branch = "ai-proposal/chat-" + stamp;
+    await api("/repos/" + OWNER + "/" + REPO + "/git/refs", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ref: "refs/heads/" + branch, sha: base.object.sha })
+    });
+    for (const change of changes) {
+      await api("/repos/" + OWNER + "/" + REPO + "/contents/" + change.path.split("/").map(encodeURIComponent).join("/"), {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "AI proposal: " + change.path, content: toBase64Utf8(change.content), branch, sha: change.sha })
+      });
+    }
+    const pr = await api("/repos/" + OWNER + "/" + REPO + "/pulls", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: String(title || "Intelligent AI self-improvement proposal").slice(0, 180), head: branch, base: "main",
+        body: String(body || "AI-generated trial proposal. Review all changes and CI checks. No automatic merge or deployment.") + "\\n\\nTrial safeguards: separate branch, exact-match patches, limited source-file allowlist, no workflow/secrets changes, no automatic merge." })
+    });
+    say("Chat proposal created ✓ Pull Request #" + pr.number + " · " + pr.html_url);
+    return { number: pr.number, url: pr.html_url, branch, files: changes.map(x => x.path) };
+  }
+  window.IntelligentGitHubBridge = { isConnected, inspect, proposePatches, repository: OWNER + "/" + REPO };
+
   $("githubReadConnect").addEventListener("submit", connect);
   $("githubReadDisconnect").addEventListener("click", disconnect);
   $("githubWriteForm").addEventListener("submit", createProposal);

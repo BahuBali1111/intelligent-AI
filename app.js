@@ -49,6 +49,43 @@ async function send(t){
   catch(err){pending.text=(lang==="hi"?"रिसर्च खोज पूरी नहीं हो सकी: ":"Research search could not complete: ")+err.message}
   delete pending.pending;saveMessages();renderMessages();return;
  }
+ const ghBridge=window.IntelligentGitHubBridge;
+ const ghStatusAsk=/(github|git hub|repository|repo).*(status|connected|connection|जुड़ा|कनेक्शन|स्थिति)|(status|connected|connection|जुड़ा|कनेक्शन|स्थिति).*(github|repository|repo)/i.test(clean);
+ const ghInspectAsk=/(inspect|review|check|जाँच|जांच|देखो|विश्लेषण).*(github|repository|repo|कोड)|(github|repository|repo|कोड).*(inspect|review|check|जाँच|जांच|देखो|विश्लेषण)/i.test(clean);
+ const ghUpdateAsk=/(self.?update|self.?improv|update.*(yourself|your code|repo|github|खुद|कोड)|improve.*(yourself|your code|repo|github|code)|fix.*(your code|repo|github)|खुद.*(अपडेट|सुधार)|कोड.*(सुधार|अपडेट)|github.*(बदलाव|सुधार|अपडेट)|khud.*(update|sudhar)|apne aap.*(update|improve)|repo.*(update|improve|sudhar))/i.test(clean);
+ if((ghStatusAsk||ghInspectAsk||ghUpdateAsk)&&ghBridge){
+  try{
+   if(!ghBridge.isConnected()){
+    pending.text=lang==="hi"?"GitHub इस खुले पेज में अभी कनेक्ट नहीं है। Settings में जाकर GitHub Token से Connect करें; फिर चैट में दोबारा कहें।":"GitHub is not connected in this page session. Connect it in Settings, then retry here.";
+   }else if(ghStatusAsk&&!ghInspectAsk&&!ghUpdateAsk){
+    pending.text=lang==="hi"?"GitHub कनेक्शन सक्रिय है: "+ghBridge.repository+"। चैट से Repository पढ़ने और प्रस्तावित बदलाव PR में भेजने की सुविधा उपलब्ध है।":"GitHub is connected: "+ghBridge.repository+". Chat can inspect approved source files and create review-only pull requests.";
+   }else{
+    const snapshot=await ghBridge.inspect();
+    if(!ghUpdateAsk){
+     pending.text=lang==="hi"?"GitHub Repository जाँच पूरी। पढ़ी गई फाइलें: "+snapshot.files.map(x=>x.path+" ("+x.size+" अक्षर)").join(", ")+". अभी कोई बदलाव नहीं किया।":"Repository inspection complete. Read files: "+snapshot.files.map(x=>x.path+" ("+x.size+" chars)").join(", ")+". No changes were made.";
+    }else if(!modelClient||!modelClient.isConnected()){
+     pending.text=lang==="hi"?"GitHub जुड़ा है, लेकिन AI मॉडल कनेक्ट नहीं है। Settings में OpenRouter/Qwen कनेक्शन फिर से करें।":"GitHub is connected, but the AI model is not connected. Reconnect OpenRouter/Qwen in Settings.";
+    }else{
+     const spec="You are the code-improvement agent for this repository. Inspect the supplied source snapshot and propose ONE small, safe, clearly useful self-improvement. Return only a valid JSON object with keys title (string), body (string), and patches (array of objects with path, find, replace strings). Each find string must be an exact unique substring from the supplied file. Use only these paths: "+snapshot.files.map(x=>x.path).join(", ")+". Make 1-3 minimal exact-match patches. Do not touch authentication, API keys, token handling, GitHub connection/security, workflow files, permissions, deployment, or safety rules. Do not invent code context. If no safe worthwhile change exists, return an object with an empty patches array."
+     const modelResult=await modelClient.chat([{role:"system",content:spec},{role:"user",content:"User request: "+clean+"\\n\\nRepository snapshot (main):\\n"+JSON.stringify(snapshot.files.map(x=>({path:x.path,content:x.content}))) }],{maxTokens:2200});
+     let proposal;
+     try{const raw=modelResult.text.trim().replace(/^`{3}(?:json)?/i,"").replace(/`{3}$/,"").trim();proposal=JSON.parse(raw)}catch(e){throw new Error("AI ने valid structured patch नहीं दिया। कोई GitHub बदलाव नहीं किया गया।")}
+     if(!proposal.patches||!proposal.patches.length){
+      pending.text=lang==="hi"?"Repository जाँच ली। अभी सुरक्षित और जरूरी बदलाव का भरोसेमंद प्रस्ताव नहीं मिला, इसलिए कोई फाइल नहीं बदली।":"Repository reviewed. No sufficiently safe improvement was identified, so no files were changed.";
+     }else{
+      const summary=proposal.patches.map(x=>x.path).join(", ");
+      const approved=confirm((lang==="hi"?"AI ने यह सुधार तैयार किया है:\\n":"AI prepared this improvement:\\n")+proposal.title+"\\nFiles: "+summary+"\\n\\n"+(lang==="hi"?"क्या इसे नई Branch और Pull Request में भेजें? main अपने आप नहीं बदलेगा।":"Create a new branch and Pull Request? main will not be changed automatically."));
+      if(!approved){pending.text=lang==="hi"?"प्रस्ताव रद्द किया। GitHub में कोई बदलाव नहीं किया।":"Proposal cancelled. No GitHub changes were made.";}
+      else{
+       const created=await ghBridge.proposePatches(proposal.patches,proposal.title,proposal.body);
+       pending.text=(lang==="hi"?"सुधार का Pull Request बन गया।\\nफाइलें: ":"Self-improvement Pull Request created.\\nFiles: ")+created.files.join(", ")+"\\n"+created.url+"\\n"+(lang==="hi"?"अब CI टेस्ट और आपका Review बाकी है। Merge अपने आप नहीं होगा।":"CI checks and your review are next. Nothing is merged automatically.");
+      }
+     }
+    }
+   }
+  }catch(err){pending.text=(lang==="hi"?"GitHub काम पूरा नहीं हुआ: ":"GitHub operation failed: ")+err.message}
+  delete pending.pending;pending.at=new Date().toISOString();saveMessages();renderMessages();return;
+ }
  if(modelClient&&modelClient.isConnected()){
   try{
    const history=messages.filter(m=>!m.pending).slice(-14).map(m=>({role:m.role==="assistant"?"assistant":"user",content:m.text}));
