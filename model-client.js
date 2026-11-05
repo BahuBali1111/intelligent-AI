@@ -1,6 +1,13 @@
 (function(root){
 "use strict";
 let config={baseUrl:"",apiKey:"",connected:false};
+const disconnectChannel=typeof BroadcastChannel!=="undefined"?new BroadcastChannel("intelligent-ai-model-session"):null;
+if(disconnectChannel)disconnectChannel.onmessage=event=>{
+ if(event.data&&event.data.type==="DISCONNECT"){
+  config={baseUrl:"",apiKey:"",connected:false};
+  root.dispatchEvent(new Event("ia-model-disconnected"));
+ }
+};
 function cleanBase(value){return String(value||"").trim().replace(/\/+$/,"")}
 async function connect(baseUrl,apiKey){
  // Keep exactly one active credential set. A new attempt replaces and clears the previous one.
@@ -25,7 +32,11 @@ async function connect(baseUrl,apiKey){
  config={baseUrl:base,apiKey:apiKey.trim(),connected:true,model:data.model||"Qwen3.5-9B"};
  return {model:config.model};
 }
-function disconnect(){config={baseUrl:"",apiKey:"",connected:false}}
+function disconnect(){
+ config={baseUrl:"",apiKey:"",connected:false};
+ if(disconnectChannel)disconnectChannel.postMessage({type:"DISCONNECT"});
+ root.dispatchEvent(new Event("ia-model-disconnected"));
+}
 function isConnected(){return config.connected}
 function getModel(){return config.model||"Qwen3.5-9B"}
 async function chat(messages,options){
