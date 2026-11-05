@@ -39,16 +39,25 @@
   function registerTool(tool){
     if(!tool||typeof tool.name!=="string"||!tool.name.trim()||typeof tool.run!=="function")throw new TypeError("A tool needs a name and run function.");
     if(tools.has(tool.name))throw new Error("Tool already registered: "+tool.name);
-    tools.set(tool.name,{name:tool.name,description:String(tool.description||""),run:tool.run});
+    const risk=["low","medium","high","critical"].includes(tool.risk)?tool.risk:"low";
+    tools.set(tool.name,{name:tool.name,description:String(tool.description||""),risk,requiresApproval:tool.requiresApproval===true||risk==="high"||risk==="critical",run:tool.run});
     return true;
   }
-  function listTools(){return Array.from(tools.values(),t=>({name:t.name,description:t.description}));}
+  function listTools(){return Array.from(tools.values(),t=>({name:t.name,description:t.description,risk:t.risk,requiresApproval:t.requiresApproval}));}
+  function prepareRequest(input,options){
+    const checked=validateMessage(input);
+    if(!checked.ok)return {ok:false,error:checked.error};
+    const brain=root.IntelligentBrain;
+    const analysis=brain&&typeof brain.understand==="function"?brain.understand(checked.value):classifyIntent(checked.value);
+    const plan=createPlan(checked.value);
+    return {ok:true,text:checked.value,analysis,plan,createdAt:new Date().toISOString(),requestId:"req-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8)};
+  }
   function runTool(name,input,context){
     const tool=tools.get(name);
     if(!tool)throw new Error("Tool is not registered: "+name);
     return tool.run(input,context||{});
   }
-  const api={version:"0.1.0-core",MAX_MESSAGE_CHARS,validateMessage,classifyIntent,createPlan,registerTool,listTools,runTool};
+  const api={version:"0.2.0-core",MAX_MESSAGE_CHARS,validateMessage,classifyIntent,createPlan,prepareRequest,registerTool,listTools,runTool};
   if(typeof module!=="undefined"&&module.exports)module.exports=api;
   root.IntelligentCore=api;
 })(typeof globalThis!=="undefined"?globalThis:this);
