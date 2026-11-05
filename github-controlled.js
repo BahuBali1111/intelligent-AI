@@ -140,11 +140,69 @@
 
   const EDITABLE_PATHS = ["assistant-brain.js","research-engine.js","knowledge.js","memory.js","context-engine.js","code-workbench.js","research-analyzer.js","research-desk.js"];
   function decodeBase64Utf8(value) {
-    const binary = atob(String(value || "").replace(/\\s/g, ""));
+    const binary = atob(String(value || "").replace(/\s/g, ""));
     const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
     return new TextDecoder().decode(bytes);
   }
   function isConnected() { return connected && !!token; }
+
+  // Read-only GitHub tools: these methods use the token already connected in Settings.
+  async function listWorkflowRuns(options = {}) {
+    if (!isConnected()) throw new Error("पहले Settings में GitHub connect करें।");
+    const branch = options.branch ? "&branch=" + encodeURIComponent(options.branch) : "";
+    const perPage = Math.min(20, Math.max(1, Number(options.perPage) || 10));
+    const data = await api("/repos/" + OWNER + "/" + REPO + "/actions/runs?per_page=" + perPage + branch);
+    return (data.workflow_runs || []).map(run => ({
+      id: run.id, name: run.name, title: run.display_title, branch: run.head_branch,
+      sha: run.head_sha, status: run.status, conclusion: run.conclusion,
+      event: run.event, created_at: run.created_at, updated_at: run.updated_at,
+      url: run.html_url, jobs_url: run.jobs_url
+    }));
+  }
+  async function inspectWorkflowRun(runId) {
+    if (!isConnected()) throw new Error("पहले Settings में GitHub connect करें।");
+    const id = String(runId || "").trim();
+    if (!/^\d{6,}$/.test(id)) throw new Error("Workflow Run ID केवल अंकों में दें।");
+    const base = "/repos/" + OWNER + "/" + REPO + "/actions/runs/" + id;
+    const [run, jobData] = await Promise.all([
+      api(base),
+      api(base + "/jobs?per_page=50")
+    ]);
+    const jobs = (jobData.jobs || []).map(job => ({
+      id: job.id, name: job.name, status: job.status, conclusion: job.conclusion,
+      started_at: job.started_at, completed_at: job.completed_at,
+      html_url: job.html_url,
+      steps: (job.steps || []).map(step => ({
+        name: step.name, status: step.status, conclusion: step.conclusion, number: step.number
+      }))
+    }));
+    return {
+      run: {
+        id: run.id, name: run.name, title: run.display_title, branch: run.head_branch,
+        sha: run.head_sha, status: run.status, conclusion: run.conclusion,
+        event: run.event, created_at: run.created_at, updated_at: run.updated_at,
+        url: run.html_url
+      },
+      jobs,
+      note: "यह GitHub Actions API से आया वास्तविक run/job/step डेटा है। विस्तृत raw console logs के लिए run या failed job का GitHub URL खोलें।"
+    };
+  }
+  async function inspectRepositoryFile(path, ref = "main", line = null) {
+    if (!isConnected()) throw new Error("पहले Settings में GitHub connect करें।");
+    const cleanPath = String(path || "").trim().replace(/^\/+/, "");
+    if (!cleanPath || cleanPath.split("/").some(part => !part || part === "." || part === "..")) {
+      throw new Error("Valid repository file path दें।");
+    }
+    const item = await api("/repos/" + OWNER + "/" + REPO + "/contents/" + cleanPath.split("/").map(encodeURIComponent).join("/") + "?ref=" + encodeURIComponent(ref || "main"));
+    if (item.type !== "file" || !item.content) throw new Error("यह सामान्य text file नहीं है या GitHub ने content नहीं दिया।");
+    const content = decodeBase64Utf8(item.content);
+    const lines = content.split(/\r?\n/);
+    const target = Number(line);
+    const excerpt = Number.isInteger(target) && target > 0
+      ? lines.slice(Math.max(0, target - 6), Math.min(lines.length, target + 5)).map((value, index) => ({ number: Math.max(1, target - 5) + index, text: value }))
+      : lines.slice(0, 300).map((value, index) => ({ number: index + 1, text: value }));
+    return { repository: OWNER + "/" + REPO, path: cleanPath, ref: ref || "main", sha: item.sha, totalLines: lines.length, excerpt, content: line ? undefined : content };
+  }
   async function inspect() {
     if (!isConnected()) throw new Error("GitHub is not connected in this page session.");
     const files = [];
@@ -188,7 +246,7 @@
       changes.push({ path, sha: current.sha, content: text });
     }
     const base = await api("/repos/" + OWNER + "/" + REPO + "/git/ref/heads/main");
-    const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\\.\\d{3}Z$/, "Z").toLowerCase();
+    const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z").toLowerCase();
     const branch = "ai-proposal/chat-" + stamp;
     await api("/repos/" + OWNER + "/" + REPO + "/git/refs", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -203,12 +261,15 @@
     const pr = await api("/repos/" + OWNER + "/" + REPO + "/pulls", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: String(title || "Intelligent AI self-improvement proposal").slice(0, 180), head: branch, base: "main",
-        body: String(body || "AI-generated trial proposal. Review all changes and CI checks. No automatic merge or deployment.") + "\\n\\nTrial safeguards: separate branch, exact-match patches, limited source-file allowlist, no workflow/secrets changes, no automatic merge." })
+        body: String(body || "AI-generated trial proposal. Review all changes and CI checks. No automatic merge or deployment.") + "\n\nTrial safeguards: separate branch, exact-match patches, limited source-file allowlist, no workflow/secrets changes, no automatic merge." })
     });
     say("Chat proposal created ✓ Pull Request #" + pr.number + " · " + pr.html_url);
     return { number: pr.number, url: pr.html_url, branch, files: changes.map(x => x.path) };
   }
-  window.IntelligentGitHubBridge = { isConnected, inspect, proposePatches, repository: OWNER + "/" + REPO };
+  window.IntelligentGitHubBridge = {
+    isConnected, inspect, proposePatches, listWorkflowRuns, inspectWorkflowRun, inspectRepositoryFile,
+    repository: OWNER + "/" + REPO
+  };
 
   $("githubReadConnect").addEventListener("submit", connect);
   $("githubReadDisconnect").addEventListener("click", disconnect);
