@@ -55,8 +55,8 @@ async function send(t){
  const ghUpdateAsk=/(self.?update|self.?improv|update.*(yourself|your code|repo|github|खुद|कोड)|improve.*(yourself|your code|repo|github|code)|fix.*(your code|repo|github)|खुद.*(अपडेट|सुधार)|कोड.*(सुधार|अपडेट)|github.*(बदलाव|सुधार|अपडेट)|khud.*(update|sudhar)|apne aap.*(update|improve)|repo.*(update|improve|sudhar))/i.test(clean);
  const ghActionsAsk=/(github\s*actions|workflow|workflows|build status|deployment status|actions status|एक्शन(्स)?|वर्कफ़्लो|वर्कफ्लो|डिप्लॉयमेंट)/i.test(clean);
  const ghRunMatch=clean.match(/(?:run|workflow|रन)\s*#?\s*(\d{6,})/i);
- const ghFileMatch=clean.match(/(?:read|show|open|inspect|फाइल पढ़ो|फ़ाइल पढ़ो|फाइल दिखाओ|फ़ाइल दिखाओ)\s+(?:the\s+)?([\w./-]+\.[a-z0-9]{1,8})(?:\s+(?:line|पंक्ति)\s*(\d+))?/i);
- if((ghStatusAsk||ghInspectAsk||ghUpdateAsk||ghActionsAsk||ghRunMatch||ghFileMatch)&&ghBridge){
+ const ghFileAsk=/(?:file|फाइल|फ़ाइल).*(?:read|show|open|inspect|पढ़|दिखा|खोल)|(?:read|show|open|inspect|पढ़ो|दिखाओ|खोलो).*(?:file|फाइल|फ़ाइल)/i.test(clean);\n const ghFileMatch=clean.match(/(?:^|[\\s\\"\x27`])((?:[\\w.-]+\\/)*[\\w.-]+\\.(?:js|json|html|css|md|txt|yml|yaml))(?=$|[\\s\\"\x27`,.;:])/i);
+ if((ghStatusAsk||ghInspectAsk||ghUpdateAsk||ghActionsAsk||ghRunMatch||(ghFileAsk&&ghFileMatch))&&ghBridge){
   try{
    if(!ghBridge.isConnected()){
     pending.text=lang==="hi"?"GitHub इस खुले पेज में अभी कनेक्ट नहीं है। Settings में जाकर GitHub Token से Connect करें; फिर चैट में दोबारा कहें।":"GitHub is not connected in this page session. Connect it in Settings, then retry here.";
@@ -64,13 +64,7 @@ async function send(t){
     const detail=await ghBridge.inspectWorkflowRun(ghRunMatch[1]);
     const jobs=detail.jobs.map(job=>job.name+": "+job.status+(job.conclusion?" / "+job.conclusion:"")).join("\\n");
     pending.text="Workflow Run #"+detail.run.id+" · "+detail.run.name+"\\nस्थिति: "+detail.run.status+" / "+(detail.run.conclusion||"अभी जारी")+"\\nBranch: "+detail.run.branch+"\\nJobs:\\n"+(jobs||"कोई job विवरण नहीं")+"\\n"+detail.run.url+"\\n"+detail.note;
-   }else if(ghActionsAsk){
-    const runs=await ghBridge.listWorkflowRuns({perPage:8});
-    pending.text=(lang==="hi"?"हाल के GitHub Actions रन:\\n":"Recent GitHub Actions runs:\\n")+runs.map(run=>"#"+run.id+" · "+run.name+" · "+run.status+(run.conclusion?" / "+run.conclusion:"")+" · "+run.branch+"\\n"+run.url).join("\\n\\n")+(runs.length?"":"कोई रन नहीं मिला।");
-   }else if(ghFileMatch){
-    const file=await ghBridge.inspectRepositoryFile(ghFileMatch[1],"main",ghFileMatch[2]?Number(ghFileMatch[2]):null);
-    pending.text="Repository file: "+file.path+" · branch "+file.ref+" · "+file.totalLines+" lines\\n"+(file.excerpt||[]).map(line=>line.number+": "+line.text).join("\\n");
-   }else if(ghStatusAsk&&!ghInspectAsk&&!ghUpdateAsk){
+   }else if(ghFileAsk&&ghFileMatch){\n    const file=await ghBridge.inspectRepositoryFile(ghFileMatch[1],"main");\n    if(modelClient&&modelClient.isConnected()){\n     const explanation=await modelClient.chat([{role:"system",content:"Explain this repository source file to a non-technical user in simple Hindi/Hinglish. Describe its purpose and main flow. Only state what is supported by the supplied code. Do not suggest or make changes."},{role:"user",content:"File: "+file.path+"\\nLines: "+file.totalLines+"\\n\\n"+file.content}],{maxTokens:850});\n     pending.text="GitHub file: "+file.path+" ("+file.totalLines+" lines)\\n\\n"+explanation.text+"\\n\\nअभी कोई बदलाव नहीं किया।";\n    }else{\n     pending.text="Repository file: "+file.path+" · "+file.totalLines+" lines\\n"+file.excerpt.slice(0,100).map(line=>line.number+": "+line.text).join("\\n")+"\\nAI model connected नहीं है, इसलिए अभी सरल व्याख्या नहीं बन सकी।";\n    }\n   }else if(ghActionsAsk){\n    const runs=await ghBridge.listWorkflowRuns({perPage:8});\n    pending.text=(lang==="hi"?"हाल के GitHub Actions रन:\\n":"Recent GitHub Actions runs:\\n")+runs.map(run=>"#"+run.id+" · "+run.name+" · "+run.status+(run.conclusion?" / "+run.conclusion:"")+" · "+run.branch+"\\n"+run.url).join("\\n\\n")+(runs.length?"":"कोई रन नहीं मिला।");\n   }else if(ghStatusAsk&&!ghInspectAsk&&!ghUpdateAsk){
     pending.text=lang==="hi"?"GitHub कनेक्शन सक्रिय है: "+ghBridge.repository+"। चैट से Repository पढ़ने, Actions रन देखने और प्रस्तावित बदलाव PR में भेजने की सुविधा उपलब्ध है।":"GitHub is connected: "+ghBridge.repository+". Chat can inspect repository files, view Actions runs, and create review-only pull requests.";
    }else{
     const snapshot=await ghBridge.inspect();
