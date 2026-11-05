@@ -58,5 +58,24 @@ async function chat(messages,options){
  if(typeof answer!=="string"||!answer.trim())throw new Error("The model returned an empty response.");
  return {text:answer.trim(),usage:data.usage||null,model:data.model||getModel(),runtimeSeconds:data.runtime_seconds||null};
 }
-root.IntelligentModelClient={connect,disconnect,isConnected,getModel,chat};
+const adapterAPI=root.IntelligentModelAdapters;
+let providerAdapter=null;
+if(adapterAPI){
+ providerAdapter=adapterAPI.get("openrouter-qwen")||adapterAPI.register({
+  name:"openrouter-qwen",
+  capabilities:["chat"],
+  connect:async settings=>connect(settings.baseUrl,settings.apiKey),
+  disconnect,
+  isConnected,
+  chat
+ });
+}
+const facade={
+ async connect(baseUrl,apiKey){return providerAdapter?providerAdapter.connect({baseUrl,apiKey}):connect(baseUrl,apiKey)},
+ disconnect(){return providerAdapter?providerAdapter.disconnect():disconnect()},
+ isConnected(){return providerAdapter?providerAdapter.isConnected():isConnected()},
+ getModel,
+ async chat(messages,options){return providerAdapter?providerAdapter.chat(messages,options):chat(messages,options)}
+};
+root.IntelligentModelClient=facade;
 })(typeof globalThis!=="undefined"?globalThis:this);
