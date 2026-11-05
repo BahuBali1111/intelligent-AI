@@ -58,6 +58,8 @@ async function send(t){
    const system=lang==="hi"
     ?"तुम Intelligent AI हो। उपयोगकर्ता से सरल, स्वाभाविक हिंदी या Hinglish में बात करो और उसके सवाल का सीधा, उपयोगी तथा तर्कपूर्ण उत्तर दो। यदि जानकारी निश्चित नहीं है तो साफ बताओ। कोई काल्पनिक टूल-एक्शन या तथ्य मत गढ़ो। कोड बदलने या बाहरी कार्रवाई का दावा तभी करो जब वह वास्तव में किया गया हो।"
     :"You are Intelligent AI. Answer clearly, naturally and thoughtfully in the user's language. Be accurate, admit uncertainty, and never claim to have used a tool or changed files unless that actually happened.";
+   const planText=(plan.steps||[]).join(" → ");
+   const plannedSystem=system+(planText?(lang==="hi"?"\nकाम की योजना: ":"\nTask plan: ")+planText:"");
    const result=await modelClient.chat([{role:"system",content:plannedSystem},...history],{maxTokens:512});
    pending.text=result.text;pending.model=result.model;pending.runtimeSeconds=result.runtimeSeconds;
   }catch(err){
