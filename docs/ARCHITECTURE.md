@@ -38,3 +38,7 @@ Honest capability disclosure; no surprise costs; user control; minimum data coll
 
 ## Request understanding and response planning
 `assistant-brain.js` normalizes English/Hindi text, detects common task intents, identifies question/command/greeting patterns, extracts simple constraints and requested formats, marks low-confidence requests for clarification, and creates a structured response plan. The chat uses the selected interface language and can retrieve related local knowledge entries. This is a deterministic starter layer, not a trained language model: nuanced Hinglish, complex multi-part instructions and factual reasoning still require model weights and evaluation. The engine must never present its confidence score as a guarantee of correctness.
+
+
+## Provider-neutral model adapter
+`model-adapter.js` defines a provider-independent contract for connect, disconnect, connection state and chat. It validates message roles/content, normalizes model responses and maintains a registry that exposes only safe provider metadata. Provider implementations can be swapped without changing orchestration code. The current OpenRouter/Qwen client is not yet migrated to this contract; this milestone establishes and tests the interface only.
