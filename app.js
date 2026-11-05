@@ -53,12 +53,25 @@ async function send(t){
  const ghStatusAsk=/(github|git hub|repository|repo).*(status|connected|connection|जुड़ा|कनेक्शन|स्थिति)|(status|connected|connection|जुड़ा|कनेक्शन|स्थिति).*(github|repository|repo)/i.test(clean);
  const ghInspectAsk=/(inspect|review|check|जाँच|जांच|देखो|विश्लेषण).*(github|repository|repo|कोड)|(github|repository|repo|कोड).*(inspect|review|check|जाँच|जांच|देखो|विश्लेषण)/i.test(clean);
  const ghUpdateAsk=/(self.?update|self.?improv|update.*(yourself|your code|repo|github|खुद|कोड)|improve.*(yourself|your code|repo|github|code)|fix.*(your code|repo|github)|खुद.*(अपडेट|सुधार)|कोड.*(सुधार|अपडेट)|github.*(बदलाव|सुधार|अपडेट)|khud.*(update|sudhar)|apne aap.*(update|improve)|repo.*(update|improve|sudhar))/i.test(clean);
- if((ghStatusAsk||ghInspectAsk||ghUpdateAsk)&&ghBridge){
+ const ghActionsAsk=/(github\s*actions|workflow|workflows|build status|deployment status|actions status|एक्शन(्स)?|वर्कफ़्लो|वर्कफ्लो|डिप्लॉयमेंट)/i.test(clean);
+ const ghRunMatch=clean.match(/(?:run|workflow|रन)\s*#?\s*(\d{6,})/i);
+ const ghFileMatch=clean.match(/(?:read|show|open|inspect|फाइल पढ़ो|फ़ाइल पढ़ो|फाइल दिखाओ|फ़ाइल दिखाओ)\s+(?:the\s+)?([\w./-]+\.[a-z0-9]{1,8})(?:\s+(?:line|पंक्ति)\s*(\d+))?/i);
+ if((ghStatusAsk||ghInspectAsk||ghUpdateAsk||ghActionsAsk||ghRunMatch||ghFileMatch)&&ghBridge){
   try{
    if(!ghBridge.isConnected()){
     pending.text=lang==="hi"?"GitHub इस खुले पेज में अभी कनेक्ट नहीं है। Settings में जाकर GitHub Token से Connect करें; फिर चैट में दोबारा कहें।":"GitHub is not connected in this page session. Connect it in Settings, then retry here.";
+   }else if(ghRunMatch){
+    const detail=await ghBridge.inspectWorkflowRun(ghRunMatch[1]);
+    const jobs=detail.jobs.map(job=>job.name+": "+job.status+(job.conclusion?" / "+job.conclusion:"")).join("\\n");
+    pending.text="Workflow Run #"+detail.run.id+" · "+detail.run.name+"\\nस्थिति: "+detail.run.status+" / "+(detail.run.conclusion||"अभी जारी")+"\\nBranch: "+detail.run.branch+"\\nJobs:\\n"+(jobs||"कोई job विवरण नहीं")+"\\n"+detail.run.url+"\\n"+detail.note;
+   }else if(ghActionsAsk){
+    const runs=await ghBridge.listWorkflowRuns({perPage:8});
+    pending.text=(lang==="hi"?"हाल के GitHub Actions रन:\\n":"Recent GitHub Actions runs:\\n")+runs.map(run=>"#"+run.id+" · "+run.name+" · "+run.status+(run.conclusion?" / "+run.conclusion:"")+" · "+run.branch+"\\n"+run.url).join("\\n\\n")+(runs.length?"":"कोई रन नहीं मिला।");
+   }else if(ghFileMatch){
+    const file=await ghBridge.inspectRepositoryFile(ghFileMatch[1],"main",ghFileMatch[2]?Number(ghFileMatch[2]):null);
+    pending.text="Repository file: "+file.path+" · branch "+file.ref+" · "+file.totalLines+" lines\\n"+(file.excerpt||[]).map(line=>line.number+": "+line.text).join("\\n");
    }else if(ghStatusAsk&&!ghInspectAsk&&!ghUpdateAsk){
-    pending.text=lang==="hi"?"GitHub कनेक्शन सक्रिय है: "+ghBridge.repository+"। चैट से Repository पढ़ने और प्रस्तावित बदलाव PR में भेजने की सुविधा उपलब्ध है।":"GitHub is connected: "+ghBridge.repository+". Chat can inspect approved source files and create review-only pull requests.";
+    pending.text=lang==="hi"?"GitHub कनेक्शन सक्रिय है: "+ghBridge.repository+"। चैट से Repository पढ़ने, Actions रन देखने और प्रस्तावित बदलाव PR में भेजने की सुविधा उपलब्ध है।":"GitHub is connected: "+ghBridge.repository+". Chat can inspect repository files, view Actions runs, and create review-only pull requests.";
    }else{
     const snapshot=await ghBridge.inspect();
     if(!ghUpdateAsk){
