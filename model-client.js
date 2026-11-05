@@ -51,12 +51,24 @@ async function chat(messages,options){
  const model=config.provider==="openrouter"?"openrouter/free":"intelligent-ai-qwen";
  const headers={"Content-Type":"application/json","Authorization":"Bearer "+config.apiKey};
  if(config.provider==="openrouter"){headers["HTTP-Referer"]=location.origin;headers["X-OpenRouter-Title"]="Intelligent AI";}
- const response=await fetch(endpoint,{method:"POST",headers,body:JSON.stringify({model,messages,max_tokens:(options&&options.maxTokens)||512,temperature:0.2}),cache:"no-store"});
- if(!response.ok){let detail="HTTP "+response.status;try{const body=await response.json();detail=(body.error&&body.error.message)||body.detail||detail}catch{}throw new Error(detail)}
- const data=await response.json();
- const answer=data&&data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
- if(typeof answer!=="string"||!answer.trim())throw new Error("The model returned an empty response.");
- return {text:answer.trim(),usage:data.usage||null,model:data.model||getModel(),runtimeSeconds:data.runtime_seconds||null};
+ function extractText(data){
+  const message=data&&data.choices&&data.choices[0]&&data.choices[0].message;
+  const content=message&&message.content;
+  if(typeof content==="string")return content.trim();
+  if(Array.isArray(content))return content.map(part=>typeof part==="string"?part:(part&&typeof part.text==="string"?part.text:"")).join("").trim();
+  if(data&&typeof data.output_text==="string")return data.output_text.trim();
+  return "";
+ }
+ let data,answer="";
+ for(let attempt=0;attempt<2;attempt++){
+  const response=await fetch(endpoint,{method:"POST",headers,body:JSON.stringify({model,messages,max_tokens:(options&&options.maxTokens)||512,temperature:attempt===0?0.2:0.35}),cache:"no-store"});
+  if(!response.ok){let detail="HTTP "+response.status;try{const body=await response.json();detail=(body.error&&body.error.message)||body.detail||detail}catch{}throw new Error(detail)}
+  data=await response.json();
+  answer=extractText(data);
+  if(answer)break;
+ }
+ if(!answer)throw new Error("The AI provider returned no readable text after one retry. Please try again; no GitHub change was made.");
+ return {text:answer,usage:data.usage||null,model:data.model||getModel(),runtimeSeconds:data.runtime_seconds||null};
 }
 root.IntelligentModelClient={connect,disconnect,isConnected,getModel,chat};
 })(typeof globalThis!=="undefined"?globalThis:this);
