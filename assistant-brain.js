@@ -52,7 +52,7 @@ function buildReply(analysis,options){
  if(analysis.constraints.length)lines.push((hi?"ध्यान में रखी शर्तें: ":"Constraints noted: ")+analysis.constraints.join(", "));
  if(analysis.confidence<0.38)lines.push(hi?"कृपया बताइए: आप किस खास चीज़ पर काम करवाना चाहते हैं?":"Please clarify the specific thing you want me to work on.");
  else if(o.capabilityNote)lines.push(o.capabilityNote);
- else if(analysis.intent!=="research")lines.push(hi?"यह शुरुआती नियम-आधारित समझ है; जटिल भाषा और गहरे तर्क के लिए असली भाषा मॉडल जोड़ना बाकी है।":"This is early rule-based understanding; a real language model is still needed for nuanced language and deeper reasoning.");
+ else if(analysis.intent!=="research"&&analysis.intent!=="memory")lines.push(hi?"यह शुरुआती नियम-आधारित समझ है; जटिल भाषा और गहरे तर्क के लिए असली भाषा मॉडल जोड़ना बाकी है।":"This is early rule-based understanding; a real language model is still needed for nuanced language and deeper reasoning.");
  if(steps.length)lines.push((hi?"काम के चरण:\n":"Work steps:\n")+steps.map((x,i)=>(i+1)+". "+x).join("\n"));
  return lines.join("\\n\\n");
 }
