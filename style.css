@@ -53,3 +53,5 @@
 .model-security-note{font-size:11px;line-height:1.6;color:#e6c98c;background:#d3a65a0c;border:1px solid #d3a65a55;border-radius:10px;padding:12px}
 .model-connect-actions{display:flex;gap:10px;flex-wrap:wrap}
 #modelConnectionStatus{overflow-wrap:anywhere}
+
+.integration-card small{display:block;color:var(--muted);line-height:1.6;overflow-wrap:anywhere}.integration-card p{line-height:1.6;overflow-wrap:anywhere}.integration-card b{color:var(--cyan)}
