@@ -3,6 +3,8 @@
 let config={baseUrl:"",apiKey:"",connected:false};
 function cleanBase(value){return String(value||"").trim().replace(/\/+$/,"")}
 async function connect(baseUrl,apiKey){
+ // Keep exactly one active credential set. A new attempt replaces and clears the previous one.
+ config={baseUrl:"",apiKey:"",connected:false};
  const base=cleanBase(baseUrl);
  if(!/^https?:\/\//i.test(base))throw new Error("Server URL must begin with https:// (or http:// for local testing).");
  if(!apiKey.trim())throw new Error("Enter the private runtime access key.");
