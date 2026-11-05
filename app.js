@@ -38,11 +38,14 @@ function language(){const w=words[lang];document.documentElement.lang=lang==="hi
 function changeLang(){lang=lang==="en"?"hi":"en";localStorage.setItem(LANG_KEY,lang);language()}
 function tab(id){$$(".tab").forEach(x=>x.classList.toggle("show",x.id===id));$$("nav button").forEach(x=>x.classList.toggle("active",x.dataset.tab===id));$("#crumb").textContent=words[lang].nav[["chat","skills","updates","memory","knowledge","research","coding","settings"].indexOf(id)];$(".layout").classList.remove("menu-open")}
 async function send(t){
- const checked=window.IntelligentCore.validateMessage(t);
- if(!checked.ok){alert(checked.error);return}
- const clean=checked.value,analysis=assistantBrain.understand(clean);analysis.language=lang;const plan={intent:analysis.intent};
+ const prepared=window.IntelligentCore.prepareRequest(t);
+ if(!prepared.ok){alert(prepared.error);return}
+ const clean=prepared.text,analysis=prepared.analysis;
+ if(!analysis.intent)analysis.intent=analysis.name||"general";
+ analysis.language=lang;
+ const plan=prepared.plan;
  messages.push({role:"user",text:clean,at:new Date().toISOString()});contextStore.capture(clean);renderContinuity();
- const pending={role:"assistant",text:lang==="hi"?"सोच रहा हूँ…":"Thinking…",at:new Date().toISOString(),pending:true};
+ const pending={role:"assistant",text:lang==="hi"?"सोच रहा हूँ…":"Thinking…",at:new Date().toISOString(),pending:true,requestId:prepared.requestId,plan};
  messages.push(pending);messages=messages.slice(-300);saveMessages();renderMessages();$("#input").value="";
  if(plan.intent==="research"){
   try{const result=await researchEngine.search(clean);pending.text=lang==="hi"?"मैंने "+result.items.length+" परिणाम पाए। नीचे मूल स्रोत खोल सकते हैं। "+(result.failedCount?"कुछ स्रोतों ने जवाब नहीं दिया।":"")+" यह पाँच सार्वजनिक इंडेक्स की खोज है, पूरा इंटरनेट नहीं।":"I found "+result.items.length+" results. Open the original sources below. "+(result.failedCount?"Some sources did not respond.":"")+" This searches five public indexes, not the entire web.";pending.sources=result.items.slice(0,8).map(x=>({title:x.title,source:x.source,url:x.url}));}
@@ -55,7 +58,7 @@ async function send(t){
    const system=lang==="hi"
     ?"तुम Intelligent AI हो। उपयोगकर्ता से सरल, स्वाभाविक हिंदी या Hinglish में बात करो और उसके सवाल का सीधा, उपयोगी तथा तर्कपूर्ण उत्तर दो। यदि जानकारी निश्चित नहीं है तो साफ बताओ। कोई काल्पनिक टूल-एक्शन या तथ्य मत गढ़ो। कोड बदलने या बाहरी कार्रवाई का दावा तभी करो जब वह वास्तव में किया गया हो।"
     :"You are Intelligent AI. Answer clearly, naturally and thoughtfully in the user's language. Be accurate, admit uncertainty, and never claim to have used a tool or changed files unless that actually happened.";
-   const result=await modelClient.chat([{role:"system",content:system},...history],{maxTokens:512});
+   const result=await modelClient.chat([{role:"system",content:plannedSystem},...history],{maxTokens:512});
    pending.text=result.text;pending.model=result.model;pending.runtimeSeconds=result.runtimeSeconds;
   }catch(err){
    pending.text=(lang==="hi"?"AI सेवा से जवाब नहीं मिल पाया: ":"Could not get a reply from the AI provider: ")+err.message+(lang==="hi"?" कृपया Settings में सर्वर कनेक्शन जाँचें।":" Please check the server connection in Settings.");
