@@ -25,13 +25,16 @@
     }
     return {name:best,confidence:score?Math.min(0.95,0.55+score*0.1):0.2,matched:score};
   }
-  function createPlan(input){
-    const intent=classifyIntent(input);
+  function createPlan(input,preferredIntent){
+    const classified=classifyIntent(input);
+    const intent={name:["research","coding","files","planning","explain","memory","general"].includes(preferredIntent)?preferredIntent:classified.name,confidence:classified.confidence};
     const steps={
       research:["Clarify the research question","Identify reliable sources","Compare evidence","Summarise findings and cite sources"],
       coding:["Understand the requested behaviour","Inspect the relevant files","Prepare a small change","Run checks and report results"],
       files:["Identify the file type and task","Extract relevant content","Analyse the requested information","Summarise findings and limitations"],
       planning:["Define the desired outcome","Break the work into ordered steps","Identify dependencies and risks","Review progress and next action"],
+      explain:["Identify the concept","Build a clear explanation","Give a relevant example","State uncertainty or limitations"],
+      memory:["Search available conversation and saved context","Check matching instructions","Report what was found and any gaps"],
       general:["Understand the request","Check whether a connected capability can handle it","Ask for clarification if needed"]
     };
     return {intent:intent.name,confidence:intent.confidence,steps:steps[intent.name].slice()};
@@ -49,7 +52,7 @@
     if(!checked.ok)return {ok:false,error:checked.error};
     const brain=root.IntelligentBrain;
     const analysis=brain&&typeof brain.understand==="function"?brain.understand(checked.value):classifyIntent(checked.value);
-    const plan=createPlan(checked.value);
+    const plan=createPlan(checked.value,analysis.intent||analysis.name);
     return {ok:true,text:checked.value,analysis,plan,createdAt:new Date().toISOString(),requestId:"req-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8)};
   }
   async function runTool(name,input,context){
