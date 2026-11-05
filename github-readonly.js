@@ -13,11 +13,11 @@ async function request(url){
  return data;
 }
 function clearView(){list.replaceChildren();preview.textContent="";files=[];}
-function disconnect(){token="";$("githubReadToken").value="";clearView();say("कनेक्शन डिस्कनेक्ट हुआ। Token इस पेज की memory से साफ कर दिया गया।");$("githubReadConnect").disabled=false;}
+function disconnect(){token="";$("githubReadToken").value="";clearView();say("कनेक्शन डिस्कनेक्ट हुआ। Token इस पेज की memory से साफ कर दिया गया।");$("githubReadConnectButton").disabled=false;}
 async function connect(event){
  event.preventDefault();const supplied=$("githubReadToken").value.trim();
  if(!supplied){say("पहले Fine-grained token डालें।");return;}
- token=supplied;$("githubReadToken").value="";$("githubReadConnect").disabled=true;clearView();say("GitHub repository की read-only अनुमति जाँच रहे हैं…");
+ token=supplied;$("githubReadToken").value="";$("githubReadConnectButton").disabled=true;clearView();say("GitHub repository की read-only अनुमति जाँच रहे हैं…");
  try{
   const repo=await request(API+"/repos/"+OWNER+"/"+REPO);
   if(repo.full_name.toLowerCase()!==(OWNER+"/"+REPO).toLowerCase())throw new Error("गलत repository मिली।");
@@ -31,7 +31,7 @@ async function connect(event){
   function render(query){results.replaceChildren();const matches=files.filter(f=>f.path.toLowerCase().includes(query.toLowerCase())).slice(0,100);for(const file of matches){const b=document.createElement("button");b.type="button";b.textContent=file.path;b.style.cssText="display:block;width:100%;text-align:left;margin:5px 0;overflow-wrap:anywhere";b.onclick=()=>openFile(file);results.append(b);}if(!matches.length){const p=document.createElement("p");p.textContent="कोई matching file नहीं मिली।";results.append(p);}}
   filter.addEventListener("input",()=>render(filter.value));render("");
  }catch(error){token="";say("कनेक्शन नहीं हुआ: "+error.message+" · Token memory से साफ कर दिया गया।");}
- finally{$("githubReadConnect").disabled=false;}
+ finally{$("githubReadConnectButton").disabled=false;}
 }
 async function openFile(file){
  say("फाइल पढ़ रहे हैं: "+file.path);preview.textContent="";
