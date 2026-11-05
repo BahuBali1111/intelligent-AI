@@ -52,10 +52,17 @@
     const plan=createPlan(checked.value);
     return {ok:true,text:checked.value,analysis,plan,createdAt:new Date().toISOString(),requestId:"req-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8)};
   }
-  function runTool(name,input,context){
+  async function runTool(name,input,context){
     const tool=tools.get(name);
     if(!tool)throw new Error("Tool is not registered: "+name);
-    return tool.run(input,context||{});
+    const ctx=context||{};
+    if(tool.requiresApproval&&ctx.approved!==true){
+      const error=new Error("Owner approval required before running this "+tool.risk+"-risk tool.");
+      error.code="OWNER_APPROVAL_REQUIRED";
+      error.tool={name:tool.name,risk:tool.risk,requiresApproval:true};
+      throw error;
+    }
+    return tool.run(input,ctx);
   }
   const api={version:"0.2.0-core",MAX_MESSAGE_CHARS,validateMessage,classifyIntent,createPlan,prepareRequest,registerTool,listTools,runTool};
   if(typeof module!=="undefined"&&module.exports)module.exports=api;
