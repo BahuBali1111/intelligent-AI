@@ -124,7 +124,7 @@ async function send(t){
    const system=lang==="hi"
     ?"तुम Intelligent AI हो। उपयोगकर्ता से सरल, स्वाभाविक हिंदी या Hinglish में बात करो और उसके सवाल का सीधा, उपयोगी तथा तर्कपूर्ण उत्तर दो। यदि जानकारी निश्चित नहीं है तो साफ बताओ। कोई काल्पनिक टूल-एक्शन या तथ्य मत गढ़ो। कोड बदलने या बाहरी कार्रवाई का दावा तभी करो जब वह वास्तव में किया गया हो।"
     :"You are Intelligent AI. Answer clearly, naturally and thoughtfully in the user's language. Be accurate, admit uncertainty, and never claim to have used a tool or changed files unless that actually happened.";
-   const result=await modelClient.chat([{role:"system",content:system},...history],{maxTokens:512});
+   const result=await modelClient.chat([{role:"system",content:system},...history],{maxTokens:900});
    pending.text=result.text;pending.model=result.model;pending.runtimeSeconds=result.runtimeSeconds;
   }catch(err){
    pending.text=(lang==="hi"?"AI सेवा से जवाब नहीं मिल पाया: ":"Could not get a reply from the AI provider: ")+err.message+(lang==="hi"?" कृपया Settings में सर्वर कनेक्शन जाँचें।":" Please check the server connection in Settings.");
