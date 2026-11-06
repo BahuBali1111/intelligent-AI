@@ -53,3 +53,17 @@
 .model-security-note{font-size:11px;line-height:1.6;color:#e6c98c;background:#d3a65a0c;border:1px solid #d3a65a55;border-radius:10px;padding:12px}
 .model-connect-actions{display:flex;gap:10px;flex-wrap:wrap}
 #modelConnectionStatus{overflow-wrap:anywhere}
+
+/* Provider key cards and opt-in local persistence */
+.provider-key-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:850px;margin:18px auto}
+.provider-key-card{min-width:0;padding:17px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#17243a,#101729);display:grid;gap:11px}
+.provider-key-card h2{margin:0;color:var(--cyan);font-size:17px}
+.provider-key-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}
+.provider-key-card>input{width:100%;min-width:0;background:#0d1527;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px}
+.provider-key-card label{font-size:12px;color:var(--muted)}
+.provider-key-card .remember-row{display:flex;align-items:center;gap:8px}
+.provider-key-card .remember-row input{accent-color:#9b83f5;width:18px;height:18px}
+.provider-key-card small{color:var(--cyan);overflow-wrap:anywhere}
+.provider-key-card .model-connect-actions button{flex:1 1 auto;width:auto}
+#modelConnectForm[hidden]{display:none}
+@media(max-width:680px){.provider-key-grid{grid-template-columns:1fr}.provider-key-card .model-connect-actions{display:grid;grid-template-columns:1fr 1fr}.provider-key-card .model-connect-actions button:first-child{grid-column:1/-1}}
