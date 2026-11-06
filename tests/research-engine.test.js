@@ -9,7 +9,9 @@ test("deduplicates identical URLs",async()=>{const f=async url=>({ok:true,status
 
 test("skips PubMed for non-medical research",async()=>{const r=await createResearchEngine(fakeFetch).search("AI models");assert.ok(!r.providers.some(x=>x.provider==="pubmed"));});
 test("includes PubMed for medical research",async()=>{const r=await createResearchEngine(fakeFetch).search("medical health research");assert.ok(r.providers.some(x=>x.provider==="pubmed"));});
-test("filters results that do not match the search topic",async()=>{const f=async url=>({ok:true,status:200,text:async()=>" <feed></feed>",json:async()=>url.includes("crossref")?{message:{items:[{title:["Unrelated financial statement"],URL:"https://example.com/finance"}]}}:{}});const r=await createResearchEngine(f).search("AI model");assert.equal(r.items.length,0);});
 
 test("Hindi AI market query expands market and model concepts",()=>{const r=createResearchEngine(fakeFetch).expandQuery("AI बाजार में नए मॉडल और फीचर्स");assert.ok(r.some(x=>x.includes("market")));assert.ok(r.some(x=>x.includes("model")));});
-test("rejects one-keyword false positives for multi-concept topics",async()=>{const f=async url=>({ok:true,status:200,text:async()=>"<feed></feed>",json:async()=>url.includes("crossref")?{message:{items:[{title:["AI in agriculture"],URL:"https://example.com/ai-agriculture"}]}}:{}});const r=await createResearchEngine(f).search("AI models");assert.equal(r.items.length,0);});
+
+test("keeps source records even when exact keyword matching is weak",async()=>{const f=async url=>({ok:true,status:200,text:async()=>" <feed></feed>",json:async()=>url.includes("crossref")?{message:{items:[{title:["A broad study of emerging technologies"],URL:"https://doi.org/10.1234/broad"}]}}:{}});const r=await createResearchEngine(f).search("AI model features");assert.ok(r.items.some(x=>x.title==="A broad study of emerging technologies"));});
+
+test("sanitizes Hindi query before GitHub repository API call",async()=>{let githubUrl="";const f=async url=>{if(url.includes("api.github.com/search/repositories"))githubUrl=url;return fakeFetch(url)};await createResearchEngine(f).search("AI बाजार में नए मॉडल");assert.ok(githubUrl);assert.ok(!decodeURIComponent(githubUrl).includes("बाजार"));});

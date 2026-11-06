@@ -44,7 +44,8 @@ async function send(t){
  messages.push({role:"user",text:clean,at:new Date().toISOString()});contextStore.capture(clean);renderContinuity();
  const pending={role:"assistant",text:lang==="hi"?"सोच रहा हूँ…":"Thinking…",at:new Date().toISOString(),pending:true};
  messages.push(pending);messages=messages.slice(-300);saveMessages();renderMessages();$("#input").value="";
- if(plan.intent==="research"){
+ const isRepositoryTask=/(github|git\\s*hub|repository|repo|गिटहब|रिपॉजिटरी)/i.test(clean);
+ if(plan.intent==="research"&&!isRepositoryTask){
   try{
    const result=await researchEngine.search(clean);
    const providerLines=result.providers.map(p=>p.name+": "+(p.status==="success"?(p.count+" results"):(p.error||"unavailable"))).join("\n");
@@ -65,7 +66,7 @@ async function send(t){
  const ghBridge=window.IntelligentGitHubBridge;
  const ghStatusAsk=/(github|git hub|repository|repo).*(status|connected|connection|जुड़ा|कनेक्शन|स्थिति)|(status|connected|connection|जुड़ा|कनेक्शन|स्थिति).*(github|repository|repo)/i.test(clean);
  const ghInspectAsk=/(inspect|review|check|जाँच|जांच|देखो|विश्लेषण).*(github|repository|repo|कोड)|(github|repository|repo|कोड).*(inspect|review|check|जाँच|जांच|देखो|विश्लेषण)/i.test(clean);
- const ghUpdateAsk=/(self.?update|self.?improv|update.*(yourself|your code|repo|github|खुद|कोड)|improve.*(yourself|your code|repo|github|code)|fix.*(your code|repo|github)|खुद.*(अपडेट|सुधार)|कोड.*(सुधार|अपडेट)|github.*(बदलाव|सुधार|अपडेट)|khud.*(update|sudhar)|apne aap.*(update|improve)|repo.*(update|improve|sudhar))/i.test(clean);
+ const ghUpdateAsk=/(self.?update|self.?improv|update.*(yourself|your code|repo|github|खुद|कोड)|improve.*(yourself|your code|repo|github|code)|fix.*(your code|repo|github)|खुद.*(अपडेट|सुधार)|कोड.*(सुधार|अपडेट)|github.*(बदलाव|सुधार|अपडेट)|khud.*(update|sudhar)|apne aap.*(update|improve)|repo.*(update|improve|sudhar)|सुधार.*(प्रस्ताव|तैयार|बनाओ)|कमियां.*(सुधार|बताओ)|क्षमताओं.*(सुधार|बढ़ाओ))/i.test(clean);
  const ghActionsAsk=/(github\s*actions|workflow|workflows|build status|deployment status|actions status|एक्शन(्स)?|वर्कफ़्लो|वर्कफ्लो|डिप्लॉयमेंट)/i.test(clean);
  const ghRunMatch=clean.match(/(?:run|workflow|रन)\s*#?\s*(\d{6,})/i);
  const ghFileAsk=/(?:file|फाइल|फ़ाइल).*(?:read|show|open|inspect|पढ़|दिखा|खोल)|(?:read|show|open|inspect|पढ़ो|दिखाओ|खोलो).*(?:file|फाइल|फ़ाइल)/i.test(clean);
