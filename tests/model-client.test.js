@@ -48,5 +48,5 @@ test("forgetting one provider leaves the other connected",async()=>{
  await c.connect("https://generativelanguage.googleapis.com/v1beta/openai","gemini-key");
  c.forget("gemini");
  assert.equal(c.isConnected(),true);
- assert.deepEqual(c.getProviders().map(x=>x.provider),["Groq"]);
+ assert.deepEqual(Array.from(c.getProviders(),x=>x.provider),["Groq"]);
 });
