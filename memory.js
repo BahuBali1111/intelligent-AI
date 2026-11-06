@@ -20,7 +20,7 @@
     function importData(json){
       const data=typeof json==="string"?JSON.parse(json):json;
       if(!data||data.version!==1||!Array.isArray(data.items))throw new Error("Unsupported memory backup format.");
-      const clean=data.items.filter(x=>x&&typeof x.text==="string"&&x.text.trim()).slice(-MAX_ITEMS).map(x=>({id:String(x.id||"import-"+Date.now()),text:x.text.trim().slice(0,MAX_TEXT),category:String(x.category||"general").slice(0,40),createdAt:x.createdAt||new Date().toISOString()}));
+      const clean=data.items.filter(x=>x&&typeof x.text==="string"&&x.text.trim()).slice(-MAX_ITEMS).map(x=>({id:String(x.id||"import-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8)),text:x.text.trim().slice(0,MAX_TEXT),category:String(x.category||"general").slice(0,40),createdAt:x.createdAt||new Date().toISOString()}));
       write(clean);return clean.length;
     }
     return {add,list,search,remove,clear,exportData,importData};
