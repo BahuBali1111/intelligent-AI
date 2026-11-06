@@ -61,10 +61,9 @@ async function chat(messages,options){
  }
  let lastDiagnostic="";
  for(let attempt=0;attempt<2;attempt++){
-  const controller=typeof AbortController!=="undefined"?new AbortController():null;
-  const timer=controller?setTimeout(()=>controller.abort(),45000):null;
+
   try{
-   const response=await fetch(endpoint,{method:"POST",headers,body:JSON.stringify({model,messages,max_tokens:(options&&options.maxTokens)||768,temperature:attempt===0?0.2:0.1}),cache:"no-store",signal:controller?controller.signal:undefined});
+   const response=await fetch(endpoint,{method:"POST",headers,body:JSON.stringify({model,messages,max_tokens:(options&&options.maxTokens)||4096,temperature:attempt===0?0.2:0.1}),cache:"no-store"});
    const raw=await response.text();
    let data={};
    try{data=raw?JSON.parse(raw):{}}catch{throw new Error("AI provider returned invalid JSON (HTTP "+response.status+").")}
@@ -79,10 +78,9 @@ async function chat(messages,options){
    lastDiagnostic="HTTP 200 but empty message content"+(choice.finish_reason?"; finish_reason="+choice.finish_reason:"")+(data.model?"; model="+data.model:"");
    if(attempt===0){await new Promise(resolve=>setTimeout(resolve,700));continue;}
   }catch(error){
-   if(controller&&controller.signal.aborted)lastDiagnostic="Request timed out after 45 seconds.";
-   else lastDiagnostic=String(error&&error.message||error);
+   lastDiagnostic=String(error&&error.message||error);
    if(attempt===0&&!(controller&&controller.signal.aborted)){await new Promise(resolve=>setTimeout(resolve,700));continue;}
-  }finally{if(timer)clearTimeout(timer);}
+  }
  }
  throw new Error("AI जवाब नहीं मिला। कारण: "+lastDiagnostic+". Settings में OpenRouter/Qwen कनेक्शन जाँचें; API key दोबारा चैट में न भेजें।");
 }
