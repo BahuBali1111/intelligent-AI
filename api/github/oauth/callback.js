@@ -26,7 +26,7 @@ module.exports = async (req,res) => {
     const repo=await repoResponse.json();
     if(!repoResponse.ok||repo.full_name!=="BahuBali1111/intelligent-AI"||!repo.permissions?.push)
       return send(res,403,{error:"repository_write_access_required",message:"The authorized GitHub account needs write access to the Intelligent AI repository."});
-    setCookie(res,"ia_github_session",seal({token:tokenData.access_token,user:user.login,exp:Date.now()+7*86400000}),7*86400);
-    res.statusCode=302; res.setHeader("Cache-Control","no-store"); res.setHeader("Location","/?github=connected"); res.end();
+    setCookie(res,"ia_github_session",seal({token:tokenData.access_token,user:user.login,exp:Date.now()+7*86400000}),7*86400,"None");
+    res.statusCode=302; res.setHeader("Cache-Control","no-store"); res.setHeader("Location","https://bahubali1111.github.io/intelligent-AI/?github=connected"); res.end();
   } catch (_) { return send(res,502,{error:"github_oauth_callback_failed"}); }
 };

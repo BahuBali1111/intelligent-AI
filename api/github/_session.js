@@ -25,10 +25,10 @@ function cookies(req) {
     const i=v.indexOf("="); return [v.slice(0,i), decodeURIComponent(v.slice(i+1))];
   }));
 }
-function setCookie(res, name, value, maxAge) {
-  const line = name+"="+encodeURIComponent(value)+"; Path=/api/github; HttpOnly; Secure; SameSite=Lax; Max-Age="+maxAge;
+function setCookie(res, name, value, maxAge, sameSite="Lax") {
+  const line = name+"="+encodeURIComponent(value)+"; Path=/api/github; HttpOnly; Secure; SameSite="+sameSite+"; Max-Age="+maxAge;
   const old=res.getHeader("Set-Cookie"); res.setHeader("Set-Cookie", old ? [].concat(old,line) : line);
 }
-function clearCookie(res,name) { setCookie(res,name,"",0); }
+function clearCookie(res,name) { setCookie(res,name,"",0,name===COOKIE?"None":"Lax"); }
 function session(req) { const c=cookies(req)[COOKIE]; const s=c && open(c); return s && s.exp>Date.now() ? s : null; }
 module.exports = { COOKIE, STATE_COOKIE, seal, open, cookies, setCookie, clearCookie, session };
