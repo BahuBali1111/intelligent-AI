@@ -88,22 +88,23 @@ async function chat(messages,options){
   const candidates=providerConfig.provider==="openrouter"?["openrouter/free",...providerConfig.freeModels.slice(0,6)]:[providerConfig.model];
   for(let index=0;index<candidates.length;index++){
    const selected=candidates[index];
-   try{
-    const body={model:selected,messages,max_tokens:Math.min(8192,Math.max(512,(options&&options.maxTokens)||4096)),temperature:index?0.1:0.2};
-    if(providerConfig.provider==="openrouter"&&selected==="openrouter/free"&&providerConfig.freeModels.length)body.models=providerConfig.freeModels.slice(0,6);
-    const response=await fetch(endpoint,{method:"POST",headers,body:JSON.stringify(body),cache:"no-store"});
-    const raw=await response.text();let data={};
-    try{data=raw?JSON.parse(raw):{}}catch{throw new Error("AI provider returned invalid JSON (HTTP "+response.status+").")}
-    if(!response.ok){
-     const detail=(data.error&&data.error.message)||data.detail||data.message||("HTTP "+response.status);
-     diagnostics.push(label(providerConfig.provider)+": "+detail+" (HTTP "+response.status+")");
-     if(response.status===401||response.status===403)break;
-     continue;
-    }
-    const answer=extractText(data),choice=data.choices&&data.choices[0]||{},finish=choice.finish_reason||null;
-    if(answer)return {text:answer,usage:data.usage||null,model:data.model||selected,provider:label(providerConfig.provider),runtimeSeconds:data.runtime_seconds||null,finishReason:finish,fallback:providerConfig.provider!==config.provider};
-    diagnostics.push(label(providerConfig.provider)+": empty response"+(finish?"; finish_reason="+finish:"")+"; model="+(data.model||selected));
-   }catch(error){diagnostics.push(label(providerConfig.provider)+": "+String(error&&error.message||error));}
+   for(let retry=0;retry<2;retry++){
+    try{
+     const body={model:selected,messages,max_tokens:Math.min(8192,Math.max(512,(options&&options.maxTokens)||4096)),temperature:index||retry?0.1:0.2};
+     if(providerConfig.provider==="openrouter"&&selected==="openrouter/free"&&providerConfig.freeModels.length)body.models=providerConfig.freeModels.slice(0,6);
+     const response=await fetch(endpoint,{method:"POST",headers,body:JSON.stringify(body),cache:"no-store"});
+     const raw=await response.text();let data={};
+     try{data=raw?JSON.parse(raw):{}}catch{throw new Error("AI provider returned invalid JSON (HTTP "+response.status+").")}
+     if(!response.ok){
+      const detail=(data.error&&data.error.message)||data.detail||data.message||("HTTP "+response.status);
+      diagnostics.push(label(providerConfig.provider)+": "+detail+" (HTTP "+response.status+")");
+      break;
+     }
+     const answer=extractText(data),choice=data.choices&&data.choices[0]||{},finish=choice.finish_reason||null;
+     if(answer)return {text:answer,usage:data.usage||null,model:data.model||selected,provider:label(providerConfig.provider),runtimeSeconds:data.runtime_seconds||null,finishReason:finish,fallback:providerConfig.provider!==config.provider};
+     diagnostics.push(label(providerConfig.provider)+": empty response"+(finish?"; finish_reason="+finish:"")+"; model="+(data.model||selected));
+    }catch(error){diagnostics.push(label(providerConfig.provider)+": "+String(error&&error.message||error));}
+   }
   }
  }
  throw new Error("सभी सेव किए गए AI प्रदाताओं को आज़माया गया, लेकिन जवाब नहीं मिला। "+diagnostics.join(" | "));
