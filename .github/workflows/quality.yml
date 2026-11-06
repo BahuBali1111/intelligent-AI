@@ -18,7 +18,7 @@ jobs:
       - name: Check required application files
         run: |
           set -eu
-          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js research-engine.js context-engine.js assistant-brain.js tests/assistant-brain.test.js tests/context-engine.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/research-engine.test.js; do
+          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js research-engine.js context-engine.js assistant-brain.js tests/assistant-brain.test.js tests/context-engine.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/research-engine.test.js tests/model-client.test.js; do
             test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
           done
       - name: Validate JavaScript syntax
@@ -28,6 +28,7 @@ jobs:
       - name: Run core syntax and tests
         run: |
           node --check app.js
+          node --check model-client.js
           node --check core.js
           node --check memory.js
           node --check knowledge.js
@@ -38,7 +39,7 @@ jobs:
           node --check research-engine.js
           node --check context-engine.js
           node --check assistant-brain.js
-          node --test tests/core.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/research-engine.test.js tests/context-engine.test.js tests/assistant-brain.test.js
+          node --test tests/model-client.test.js tests/core.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/research-engine.test.js tests/context-engine.test.js tests/assistant-brain.test.js
       - name: Validate JSON manifest
         run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
       - name: Check core page references
