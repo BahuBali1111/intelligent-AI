@@ -14,29 +14,9 @@
 <form id="modelConnectForm" class="memory-form model-connect-form" hidden></form>
 <div class="model-security-note"><b>Key storage:</b> By default keys are not saved. If you enable “Remember”, the key is stored in this browser's local storage on this device so it remains after refresh. Anyone with access to this browser profile or injected page script may be able to read it. Use only on your personal trusted phone; never on a shared device. Keys are never committed to GitHub. “Forget saved key” removes the local copy.</div>
 <article class="warning"><b>Provider fallback</b><p>Only one provider is active at a time in this version. Save keys for all three, then connect whichever provider you want to use. Free quotas are limited; there is no unlimited-use bypass and no automatic paid fallback.</p></article>
-<h2>GitHub repository connection · Temporary browser mode</h2>
-<p class="lead">Connect to BahuBali1111/intelligent-AI. This temporary mode keeps the token only in this open page's memory and creates changes on a separate branch with a Pull Request. It never writes directly to main.</p>
-<form id="githubReadConnect" class="memory-form">
-<label for="githubReadToken">GitHub Fine-grained Personal Access Token</label>
-<input id="githubReadToken" type="password" placeholder="Paste temporary GitHub token" autocomplete="off" autocapitalize="off" spellcheck="false" required>
-<div class="model-security-note"><b>Temporary security warning:</b> This public GitHub Pages website runs in your browser. A write token entered here can be accessed by page JavaScript while connected. Use only your repository-scoped token, on your own trusted device. Do not share screenshots or keep the page open on a shared device. Token is not saved to localStorage; Disconnect or close the page to clear it. For permanent use, replace this with a secure backend.</div>
-<div class="model-connect-actions"><button id="githubReadConnectButton" type="submit">Connect GitHub (Read + propose)</button><button id="githubReadDisconnect" type="button">Disconnect</button></div>
-<small id="githubReadStatus" aria-live="polite">Not connected · Paste your temporary token to connect.</small>
-<div id="githubReadFiles" class="memory-list"></div>
-<pre id="githubReadPreview" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;background:#080e1c;border:1px solid #29334c;border-radius:10px;padding:12px;color:#dce7ff"></pre>
-</form>
-<form id="githubWriteForm" class="memory-form" hidden>
-<h3>Prepare a GitHub change</h3>
-<p>Enter the proposed file path and complete file content. The site creates a new <code>ai-proposal/</code> branch and opens a Pull Request for review.</p>
-<label for="githubWritePath">Repository file path</label>
-<input id="githubWritePath" placeholder="e.g. docs/improvement-plan.md" required>
-<label for="githubWriteTitle">Pull Request title</label>
-<input id="githubWriteTitle" maxlength="200" placeholder="Describe the proposed improvement" required>
-<label for="githubWriteMessage">Commit message</label>
-<input id="githubWriteMessage" maxlength="200" placeholder="Propose improvement" >
-<label for="githubWriteContent">Complete file content</label>
-<textarea id="githubWriteContent" rows="10" maxlength="200000" placeholder="Paste the complete proposed file content here…" required></textarea>
-<div class="model-security-note">Safety limits: this first version blocks workflow files, environment secrets and private-key files. It creates a branch and PR only; it does not merge or deploy. Review the diff and checks before you approve anything.</div>
-<button id="githubWriteSubmit" type="submit">Create proposal branch + Pull Request</button>
-</form>
-<article class="panel"><div><b>Version</b><p>Intelligent AI · 0.2.4 · Provider connection test</p></div></article><article class="panel"><div><b>Install on device</b><p>Use your browser’s Install app option when available.</p></div></article></section><footer>✦ Intelligent AI <span>Made to grow carefully · v0.2.4</span></footer></main></div><script src="./core.js?v=1.3.0"></script><script src="./memory.js?v=1.3.0"></script><script src="./knowledge.js?v=1.3.0"></script><script src="./update-engine.js?v=1.3.0"></script><script src="./research-desk.js?v=1.3.0"></script><script src="./research-analyzer.js?v=1.3.0"></script><script src="./code-workbench.js?v=1.3.0"></script><script src="./research-engine.js?v=1.3.1"></script><script src="./context-engine.js?v=1.3.0"></script><script src="./assistant-brain.js?v=1.3.0"></script><script src="./model-client.js?v=0.2.8"></script><script src="./app.js?v=1.8.0" defer></script><script src="./github-controlled.js?v=1.0.0"></script></body></html>
+<h2>GitHub repository connection · Secure OAuth</h2>
+<p class="lead">Connect Intelligent AI to the owner-authorized GitHub account. Authorization runs through the secure backend; no Personal Access Token is entered or stored in this browser.</p>
+<article class="panel"><div><b>Repository</b><p>BahuBali1111/intelligent-AI</p><small id="githubOAuthStatus" aria-live="polite">Checking secure GitHub connection…</small></div></article>
+<div class="model-connect-actions"><a class="button" id="githubOAuthConnect" href="https://intelligent-ai-backend-5zc8yx7l3-vijay-s-projects-29cd4ca0.vercel.app/api/github/oauth/start">Connect GitHub securely</a><button id="githubOAuthDisconnect" type="button">Disconnect GitHub</button></div>
+<p class="model-security-note">After authorization, the backend keeps the GitHub token in an encrypted, HttpOnly session cookie. This first connection milestone verifies repository write access; automated code proposals will be enabled only after the server-side review and audit controls are completed.</p>
+<article class="panel"><div><b>Version</b><p>Intelligent AI · 0.2.4 · Provider connection test</p></div></article><article class="panel"><div><b>Install on device</b><p>Use your browser’s Install app option when available.</p></div></article></section><footer>✦ Intelligent AI <span>Made to grow carefully · v0.2.4</span></footer></main></div><script src="./core.js?v=1.3.0"></script><script src="./memory.js?v=1.3.0"></script><script src="./knowledge.js?v=1.3.0"></script><script src="./update-engine.js?v=1.3.0"></script><script src="./research-desk.js?v=1.3.0"></script><script src="./research-analyzer.js?v=1.3.0"></script><script src="./code-workbench.js?v=1.3.0"></script><script src="./research-engine.js?v=1.3.1"></script><script src="./context-engine.js?v=1.3.0"></script><script src="./assistant-brain.js?v=1.3.0"></script><script src="./model-client.js?v=0.2.8"></script><script src="./app.js?v=1.8.0" defer></script><script src="./github-oauth.js?v=1.0.0"></script></body></html>
