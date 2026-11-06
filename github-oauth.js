@@ -1,6 +1,6 @@
 "use strict";
 (() => {
-  const BACKEND = "https://intelligent-ai-backend-5zc8yx7l3-vijay-s-projects-29cd4ca0.vercel.app";
+  const BACKEND = "https://intelligent-ai-backend.vercel.app";
   const status = document.getElementById("githubOAuthStatus");
   const connect = document.getElementById("githubOAuthConnect");
   const disconnect = document.getElementById("githubOAuthDisconnect");
