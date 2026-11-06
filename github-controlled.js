@@ -207,12 +207,12 @@
     if (!isConnected()) throw new Error("GitHub is not connected in this page session.");
     const files = [];
     for (const path of EDITABLE_PATHS) {
-      if (files.length >= 4) break;
+      if (files.length >= 8) break;
       try {
         const item = await api("/repos/" + OWNER + "/" + REPO + "/contents/" + path + "?ref=main");
         if (item.type !== "file" || !item.content) continue;
         const text = decodeBase64Utf8(item.content);
-        files.push({ path, sha: item.sha, size: text.length, content: text.slice(0, 9000) });
+        files.push({ path, sha: item.sha, size: text.length, content: text.slice(0, 4500) });
       } catch (error) {
         if (!String(error.message).includes("404")) throw error;
       }
