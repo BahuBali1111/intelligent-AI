@@ -20,6 +20,10 @@ module.exports = async function chat(req, res) {
     return send(res, 405, { error: "method_not_allowed" });
   }
   if (!allowedOrigin(req)) return send(res, 403, { error: "origin_not_allowed" });
+  if (req.headers.origin) {
+    res.setHeader("Access-Control-Allow-Origin", req.headers.origin);
+    res.setHeader("Vary", "Origin");
+  }
   const auth = authorize(req);
   if (!auth.ok) return send(res, auth.status, { error: auth.error });
   const endpoint = process.env.AI_PROVIDER_URL || "";
