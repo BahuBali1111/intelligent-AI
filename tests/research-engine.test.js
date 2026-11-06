@@ -15,3 +15,8 @@ test("Hindi AI market query expands market and model concepts",()=>{const r=crea
 test("keeps source records even when exact keyword matching is weak",async()=>{const f=async url=>({ok:true,status:200,text:async()=>" <feed></feed>",json:async()=>url.includes("crossref")?{message:{items:[{title:["A broad study of emerging technologies"],URL:"https://doi.org/10.1234/broad"}]}}:{}});const r=await createResearchEngine(f).search("AI model features");assert.ok(r.items.some(x=>x.title==="A broad study of emerging technologies"));});
 
 test("sanitizes Hindi query before GitHub repository API call",async()=>{let githubUrl="";const f=async url=>{if(url.includes("api.github.com/search/repositories"))githubUrl=url;return fakeFetch(url)};await createResearchEngine(f).search("AI बाजार में नए मॉडल");assert.ok(githubUrl);assert.ok(!decodeURIComponent(githubUrl).includes("बाजार"));});
+
+
+test("expands long Hindi instructions into a concise focused search query",()=>{const r=createResearchEngine(fakeFetch).expandQuery("AI बाजार में नवंबर 2026 तक आए 5 नए AI मॉडल खोजो कम से कम 5 अलग-अलग वेबसाइटों और विश्वसनीय स्रोतों से जानकारी जुटाओ");assert.ok(r.length>=3);assert.ok(r[2].includes("market"));assert.ok(r[2].includes("November"));assert.ok(r[2].includes("models"));});
+
+test("does not impose a client-side abort timeout on source requests",async()=>{let received;const f=async(url,options)=>{received=options;return fakeFetch(url)};await createResearchEngine(f).search("solar energy");assert.ok(received);assert.equal("signal" in received,false);});
