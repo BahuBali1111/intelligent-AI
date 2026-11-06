@@ -27,7 +27,7 @@ async function connect(baseUrl,apiKey){
   endpoint="https://api.groq.com/openai/v1";
   const check=await fetch(endpoint+"/models",{headers:{Authorization:"Bearer "+key,Accept:"application/json"},cache:"no-store"});
   if(!check.ok)throw new Error(check.status===401?"Groq API key rejected (HTTP 401).":"Groq connection check failed: HTTP "+check.status);
-  provider="groq";model="llama-3.3-70b-versatile";
+  provider="groq";model="openai/gpt-oss-120b";
  }else if(host==="generativelanguage.googleapis.com"){
   endpoint="https://generativelanguage.googleapis.com/v1beta/openai";
   const check=await fetch(endpoint+"/models",{headers:{Authorization:"Bearer "+key,Accept:"application/json"},cache:"no-store"});
