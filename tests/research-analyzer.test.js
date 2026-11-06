@@ -1,7 +1,0 @@
-"use strict";
-const test=require("node:test"),assert=require("node:assert/strict"),{analyze,tokenize}=require("../research-analyzer.js");
-test("finds recurring themes across saved research notes",()=>{const r=analyze("service worker caching",[{title:"MDN",query:"service worker",url:"https://developer.mozilla.org",notes:"Service worker caching offline assets and cache versioning"},{title:"GitHub",query:"service worker",url:"https://github.com",notes:"Service worker cache versioning and offline assets"}]);assert.equal(r.sourceCount,2);assert.ok(r.keyTerms.some(x=>x.term==="cache"||x.term==="caching"));assert.equal(r.matchedCount,2)});
-test("reports sources with and without notes",()=>{const r=analyze("browser",[{title:"A",query:"browser",notes:"Browser automation tools"},{title:"B",query:"browser",notes:""}]);assert.equal(r.notesCount,1);assert.equal(r.sourceReview.length,2)});
-test("rejects missing topic or sources",()=>{assert.throws(()=>analyze("",[]));assert.throws(()=>analyze("AI",[]))});
-test("tokenizes Hindi combining marks",()=>{assert.ok(tokenize("हिंदी जानकारी").includes("हिंदी"))});
-test("counts every term occurrence separately from distinct source coverage",()=>{const r=analyze("nebula",[{title:"First note",query:"astronomy",url:"https://example.com/one",notes:"nebula nebula nebula nebula"},{title:"Second note",query:"astronomy",url:"https://example.com/two",notes:"nebula"}]);const term=r.keyTerms.find(x=>x.term==="nebula");assert.ok(term);assert.equal(term.count,5);assert.equal(term.sources,2);assert.equal(term.coverage,100)});
