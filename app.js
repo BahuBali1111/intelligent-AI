@@ -45,8 +45,21 @@ async function send(t){
  const pending={role:"assistant",text:lang==="hi"?"सोच रहा हूँ…":"Thinking…",at:new Date().toISOString(),pending:true};
  messages.push(pending);messages=messages.slice(-300);saveMessages();renderMessages();$("#input").value="";
  if(plan.intent==="research"){
-  try{const result=await researchEngine.search(clean);pending.text=lang==="hi"?"मैंने "+result.items.length+" परिणाम पाए। नीचे मूल स्रोत खोल सकते हैं। "+(result.failedCount?"कुछ स्रोतों ने जवाब नहीं दिया।":"")+" यह पाँच सार्वजनिक इंडेक्स की खोज है, पूरा इंटरनेट नहीं।":"I found "+result.items.length+" results. Open the original sources below. "+(result.failedCount?"Some sources did not respond.":"")+" This searches eight public indexes, not the entire web.";pending.sources=result.items.slice(0,8).map(x=>({title:x.title,source:x.source,url:x.url}));}
-  catch(err){pending.text=(lang==="hi"?"रिसर्च खोज पूरी नहीं हो सकी: ":"Research search could not complete: ")+err.message}
+  try{
+   const result=await researchEngine.search(clean);
+   const providerLines=result.providers.map(p=>p.name+": "+(p.status==="success"?(p.count+" results"):(p.error||"unavailable"))).join("\n");
+   const sourceList=result.items.slice(0,8).map((x,i)=>(i+1)+". "+x.title+" | "+x.source+" | "+(x.date||"date not supplied")+" | "+x.snippet+" | "+x.url).join("\n");
+   if(modelClient&&modelClient.isConnected()&&result.items.length){
+    const researchPrompt=lang==="hi"
+     ?"तुम Intelligent AI के रिसर्च विश्लेषक हो। नीचे दिए गए सार्वजनिक इंडेक्स के खोज-परिणामों के आधार पर सरल हिंदी में संक्षिप्त रिपोर्ट बनाओ। केवल उपलब्ध शीर्षक/snippet/तारीख से समर्थित बातें कहो; पूरे लेख पढ़ लेने का दावा मत करो। कम-से-कम 2 अलग-अलग स्रोत प्रदाता न हों तो साफ बताओ कि स्वतंत्र स्रोतों की पुष्टि अपर्याप्त है। विरोधाभास, तारीख और सीमाएँ बताओ। हर तथ्य के साथ [S1], [S2] जैसे स्रोत संकेत लगाओ और अंत में उन्हीं संकेतों के साथ URL सूची दो। कोई लिंक या तथ्य मत गढ़ो।"
+     :"You are the research analyst for Intelligent AI. Produce a concise evidence-based report from the supplied public-index search records. Use only supplied titles/snippets/dates; never claim to have read full pages. If fewer than two independent providers returned relevant results, clearly say independent-source confirmation is insufficient. Note dates, uncertainty and limitations. Cite claims as [S1], [S2] and list only supplied URLs. Never invent sources or facts.";
+    const synthesis=await modelClient.chat([{role:"system",content:researchPrompt},{role:"user",content:"Research question: "+clean+"\nProvider status:\n"+providerLines+"\nSearch records:\n"+sourceList+"\n\nExplain what is supported, what is not established, and what additional source access is needed."}],{maxTokens:1500});
+    pending.text=synthesis.text+"\n\n"+(lang==="hi"?"स्रोत प्रदाता स्थिति:\n":"Provider status:\n")+providerLines+"\n\n"+(lang==="hi"?"सीमा: अभी केवल सार्वजनिक API/index से मिले शीर्षक और छोटे विवरण पढ़े गए हैं; पूरी वेबसाइट/लेख स्वतः नहीं पढ़े गए।":"Limit: only titles and short snippets from public APIs/indexes were read; full web pages were not fetched.");
+   }else{
+    pending.text=(lang==="hi"?"मुझे "+result.items.length+" संबंधित खोज परिणाम मिले। नीचे मूल स्रोत खोलें।":"Found "+result.items.length+" relevant search results. Open the original sources below.")+"\n\n"+(lang==="hi"?"स्रोतों की स्थिति:\n":"Provider status:\n")+providerLines+"\n\n"+(result.successCount<2?(lang==="hi"?"दो स्वतंत्र स्रोत प्रदाताओं से परिणाम नहीं मिले; पुष्टि अधूरी है।":"Fewer than two independent providers returned results; confirmation is incomplete."):"")+(lang==="hi"?"\nसीमा: केवल सार्वजनिक API/index के शीर्षक और snippets मिले हैं, पूरी वेबसाइटें नहीं पढ़ी गईं।":"\nLimit: only titles and snippets from public APIs/indexes were retrieved, not full web pages.");
+   }
+   pending.sources=result.items.slice(0,8).map(x=>({title:x.title,source:x.source,url:x.url}));
+  }catch(err){pending.text=(lang==="hi"?"रिसर्च खोज पूरी नहीं हो सकी: ":"Research search could not complete: ")+err.message}
   delete pending.pending;saveMessages();renderMessages();return;
  }
  const ghBridge=window.IntelligentGitHubBridge;
