@@ -1,5 +1,5 @@
 (function(root){"use strict";
-const HINDI_TERMS={"नया":"new","नए":"latest","मॉडल":"models","मॉडल्स":"models","फीचर":"features","फीचर्स":"features","रिसर्च":"research","तुलना":"comparison","सुरक्षा":"security","सुरक्षित":"secure safe","कोड":"code","वेबसाइट":"website","ऐप":"app","इंटरनेट":"internet","खोज":"search","जानकारी":"information","आज":"today","ताजा":"latest","ताज़ा":"latest","क्षमता":"capability","क्षमताएं":"capabilities","कृत्रिम":"artificial","बुद्धिमत्ता":"intelligence","सीखना":"learning","डेटा":"data","विज्ञान":"science","तकनीक":"technology","स्वास्थ्य":"health","भारत":"India","समस्या":"problem","समाधान":"solution","ओपन":"open","सोर्स":"source"};
+const HINDI_TERMS={"नया":"new","नए":"latest","मॉडल":"model models","मॉडल्स":"models","फीचर":"feature","फीचर्स":"features","रिसर्च":"research","तुलना":"comparison","सुरक्षा":"security","सुरक्षित":"secure safe","कोड":"code","वेबसाइट":"website","ऐप":"app","इंटरनेट":"internet","खोज":"search","जानकारी":"information","आज":"today","ताजा":"latest","ताज़ा":"latest","क्षमता":"capability","क्षमताएं":"capabilities","कृत्रिम":"artificial","बुद्धिमत्ता":"intelligence","सीखना":"learning","डेटा":"data","विज्ञान":"science","तकनीक":"technology","स्वास्थ्य":"health","भारत":"India","समस्या":"problem","समाधान":"solution","ओपन":"open","सोर्स":"source","बाजार":"market","बाज़ार":"market","आए":"arrived","संबंधित":"relevant","दिखाओ":"show","मुझे":"me","करो":"","कम":"","से":"","में":"","पर":"","और":"and","क्या":"what","कौन":"which","हैं":"are","है":"is"};
 const PROVIDERS=[
 {id:"wikipedia",name:"Wikipedia",kind:"encyclopedia",url:q=>"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch="+encodeURIComponent(q)+"&srprop=snippet&format=json&origin=*&srlimit=5",map:j=>(j.query?.search||[]).map(x=>({title:x.title,snippet:String(x.snippet||"").replace(/<[^>]*>/g," "),url:"https://en.wikipedia.org/wiki/"+encodeURIComponent(x.title.replace(/ /g,"_"))}))},
 {id:"crossref",name:"Crossref papers",kind:"academic",url:q=>"https://api.crossref.org/works?query.bibliographic="+encodeURIComponent(q)+"&rows=5&select=title,author,published,URL,container-title,DOI",map:j=>(j.message?.items||[]).map(x=>({title:(x.title||["Untitled paper"])[0],snippet:[(x["container-title"]||[])[0],x.author?.slice(0,3).map(a=>[a.given,a.family].filter(Boolean).join(" ")).join(", "),x.published?.["date-parts"]?.[0]?.join("-")].filter(Boolean).join(" · "),url:x.URL||("https://doi.org/"+x.DOI),date:x.published?.["date-parts"]?.[0]?.join("-")}))},
@@ -22,13 +22,15 @@ async function search(query){
  for(const p of activeProviders)grouped.set(p.id,{provider:p.id,name:p.name,status:"success",count:0,items:[],errors:[]});
  for(const x of settled){const g=grouped.get(x.provider);if(x.status==="success"){g.count+=x.count;g.items.push(...x.items)}else g.errors.push(x.error)}
  const providers=[...grouped.values()].map(g=>({...g,status:g.count||!g.errors.length?"success":"error",error:g.errors.join("; ")}));
- const terms=[...new Set(variants.join(" ").toLocaleLowerCase().split(/\s+/).filter(t=>t.length>2&&!["the","and","for","with","latest","new","about","from"].includes(t)))];
+ const terms=[...new Set(variants.join(" ").toLocaleLowerCase().split(/\s+/).filter(t=>t.length>=2&&!["the","and","for","with","latest","new","about","from","में","से","पर","और","है","हैं","करो","करें","मुझे","कम","क्या","को","का","की","के","आए","arrived","are","is","me","what","show"].includes(t)))];
  const seen=new Set(),items=[];
  for(const result of providers)for(const item of result.items){
   const key=item.url.replace(/[?#].*$/,"").replace(/\/$/,"").toLowerCase();if(seen.has(key))continue;seen.add(key);
-  const hay=(item.title+" "+item.snippet).toLocaleLowerCase();
-  item.score=terms.reduce((n,t)=>n+(hay.includes(t)?1:0),0);
-  if(item.score>0)items.push(item);
+  const titleHay=item.title.toLocaleLowerCase(),snippetHay=item.snippet.toLocaleLowerCase();
+  const titleHits=terms.filter(t=>titleHay.includes(t)).length,snippetHits=terms.filter(t=>snippetHay.includes(t)).length;
+  item.score=titleHits*3+snippetHits;
+  const minConcepts=terms.length<=1?1:2;
+  if(titleHits+snippetHits>=minConcepts&&item.score>0)items.push(item);
  }
  items.sort((a,b)=>b.score-a.score||String(b.date).localeCompare(String(a.date))||a.source.localeCompare(b.source));
  return {query:q,queryVariants:variants,items,providers:providers.map(({provider,name,status,count,error})=>({provider,name,status,count,error:error||""})),successCount:providers.filter(x=>x.status==="success").length,failedCount:providers.filter(x=>x.status==="error").length,searchedAt:new Date().toISOString(),notice:"Relevant matches only. Searches public indexes/APIs, not the entire web. Some sources may block browser requests or rate-limit. Verify original pages, dates and claims."}
