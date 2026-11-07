@@ -35,7 +35,7 @@ GitHub Actions also runs syntax, manifest, file-reference and test checks. The G
 - Language generation depends on a connected external or self-hosted model runtime.
 - Browser-local memory does not automatically sync across devices.
 - Web research uses selected public providers and may be incomplete.
-- GitHub changes are proposed on separate branches and require review; no plugin receives GitHub credentials.
+- GitHub changes are proposed on separate branches and require review. The plugin API does not pass GitHub credentials, but plugins run in the same page origin and are not a sandbox; review all plugin code as trusted application code.
 - Never commit API keys, tokens, or private environment values.
 - Production merges and deployments require explicit human approval.
 
