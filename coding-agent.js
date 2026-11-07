@@ -73,7 +73,7 @@
       totalChars += code.length;
       if (totalChars > MAX_TOTAL_CHARS) throw new Error("Project exceeded the total draft size limit. Reduce the number or size of files.");
       const draft = workbench.create({ path: file.path, reason: "AI-generated project draft: " + manifest.projectName + ". " + file.purpose, before: "", after: code });
-      drafts.push({ path: file.path, draftId: draft.id, chars: code.length });
+      drafts.push({ path: file.path, draftId: draft.id, chars: code.length, content: code });
     }
     progress({ stage: "complete", message: "Generated " + drafts.length + " project files as local review drafts." });
     return { manifest, drafts, complete: true, totalChars };
