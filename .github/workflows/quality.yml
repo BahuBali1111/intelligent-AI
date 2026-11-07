@@ -18,7 +18,7 @@ jobs:
       - name: Check required application files
         run: |
           set -eu
-          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js coding-agent.js local-workspace.js tests/coding-agent.test.js tests/local-workspace.test.js research-engine.js context-engine.js assistant-brain.js plugin-system.js plugins/example-echo/index.js tests/plugin-system.test.js tests/assistant-brain.test.js tests/context-engine.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/coding-agent.test.js tests/local-workspace.test.js tests/research-engine.test.js tests/model-client.test.js; do
+          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js coding-agent.js local-workspace.js tests/coding-agent.test.js tests/local-workspace.test.js research-engine.js context-engine.js assistant-brain.js plugin-system.js plugins/example-echo/index.js tests/plugin-system.test.js tests/assistant-brain.test.js tests/context-engine.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/coding-agent.test.js tests/local-workspace.test.js tests/research-engine.test.js tests/model-client.test.js tests/dom-integrity.test.js; do
             test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
           done
       - name: Validate JavaScript syntax
@@ -53,7 +53,7 @@ jobs:
           node --check api/_lib.js
           node --check api/health.js
           node --check api/chat.js
-          node --test tests/plugin-system.test.js tests/backend.test.js tests/model-client.test.js tests/core.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/coding-agent.test.js tests/local-workspace.test.js tests/research-engine.test.js tests/context-engine.test.js tests/assistant-brain.test.js
+          node --test tests/dom-integrity.test.js tests/plugin-system.test.js tests/backend.test.js tests/model-client.test.js tests/core.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/coding-agent.test.js tests/local-workspace.test.js tests/research-engine.test.js tests/context-engine.test.js tests/assistant-brain.test.js
       - name: Validate JSON manifest
         run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
       - name: Check core page references
