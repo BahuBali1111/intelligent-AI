@@ -49,7 +49,7 @@ async function send(t){
   try{
    const result=await researchEngine.search(clean);
    const providerLines=result.providers.map(p=>p.name+": "+(p.status==="success"?(p.count+" results"):(p.error||"unavailable"))).join("\n");
-   const sourceList=result.items.slice(0,10).map((x,i)=>(i+1)+". "+x.title+" | "+x.source+" | "+(x.date||"date not supplied")+" | "+x.snippet+" | "+x.url+(x.fullText?"\\nFULL PAGE TEXT (reader extract): "+x.fullText.slice(0,9000):"\\nPage reading: "+(x.pageRead||"not attempted"))).join("\n");
+   const sourceList=result.items.slice(0,10).map((x,i)=>(i+1)+". "+x.title+" | "+x.source+" | "+(x.date||"date not supplied")+" | "+x.snippet+" | "+x.url+(x.fullText?"\nFULL PAGE TEXT (reader extract): "+x.fullText.slice(0,9000):"\nPage reading: "+(x.pageRead||"not attempted"))).join("\n");
    if(modelClient&&modelClient.isConnected()&&result.items.length){
     const researchPrompt=lang==="hi"
      ?"तुम Intelligent AI के रिसर्च विश्लेषक हो। नीचे दिए गए सार्वजनिक इंडेक्स के खोज-परिणामों के आधार पर सरल हिंदी में संक्षिप्त रिपोर्ट बनाओ। केवल उपलब्ध शीर्षक/snippet/तारीख से समर्थित बातें कहो; पूरे लेख पढ़ लेने का दावा मत करो। कम-से-कम 2 अलग-अलग स्रोत प्रदाता न हों तो साफ बताओ कि स्वतंत्र स्रोतों की पुष्टि अपर्याप्त है। पूरे पेज का टेक्स्ट उपलब्ध हो तो उसका भी विश्लेषण करो; केवल snippets पर निर्भर मत रहो। विरोधाभास, तारीख और सीमाएँ बताओ। हर तथ्य के साथ [S1], [S2] जैसे स्रोत संकेत लगाओ और अंत में उन्हीं संकेतों के साथ URL सूची दो। कोई लिंक या तथ्य मत गढ़ो।"
