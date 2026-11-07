@@ -17,7 +17,8 @@
       if (typeof plugin.register !== "function" || typeof plugin.run !== "function" || typeof plugin.test !== "function") {
         throw new TypeError("Plugin must implement register(api), run(input, context) and test().");
       }
-      const tools = [];
+      const pendingTools = [];
+      const existingNames = new Set(typeof core.listTools === "function" ? core.listTools().map(tool => tool.name) : []);
       const api = Object.freeze({
         apiVersion: API_VERSION,
         registerTool(name, description, run) {
@@ -25,17 +26,20 @@
           if (!/^[a-z][a-z0-9-]{0,47}$/.test(localName)) throw new TypeError("Invalid plugin tool name.");
           if (typeof run !== "function") throw new TypeError("Plugin tool run must be a function.");
           const fullName = "plugin." + id + "." + localName;
-          core.registerTool({ name: fullName, description: String(description || "").slice(0, 240), run });
-          tools.push(fullName);
+          if (existingNames.has(fullName) || pendingTools.some(tool => tool.name === fullName)) throw new Error("Duplicate plugin tool: " + fullName);
+          pendingTools.push({ name: fullName, description: String(description || "").slice(0, 240), run });
           return fullName;
         }
       });
       let dispose;
       try {
         dispose = plugin.register(api);
+        if (dispose && typeof dispose.then === "function") throw new TypeError("Plugin register(api) must be synchronous.");
+        for (const tool of pendingTools) core.registerTool(tool);
       } catch (error) {
         throw new Error("Plugin registration failed (" + id + "): " + String(error && error.message || error));
       }
+      const tools = pendingTools.map(tool => tool.name);
       plugins.set(id, {
         id,
         name: String(plugin.name || id).slice(0, 100),
