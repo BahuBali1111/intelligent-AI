@@ -48,7 +48,7 @@ async function send(t){
  messages.push({role:"user",text:clean,at:new Date().toISOString()});contextStore.capture(clean);renderContinuity();
  const pending={role:"assistant",text:lang==="hi"?"सोच रहा हूँ…":"Thinking…",at:new Date().toISOString(),pending:true};
  messages.push(pending);messages=messages.slice(-300);saveMessages();renderMessages();$("#input").value="";
- const buildIntent=/(\b(build|create|make|generate|develop|banao|banaiye|banana|taiyar karo|app banao|project banao)\b|बनाओ|बनाइए|बनाना|तैयार करो|तैयार करें|बनाकर दो)/i.test(clean);
+ const buildIntent=/(\b(build|create|make|generate|develop|banao|banaiye|banana|bana do|bana ke do|bana kar do|taiyar karo|taiyar kar|app banao|project banao)\b|बनाओ|बनाइए|बनाना|बना दो|बना दीजिए|तैयार करो|तैयार करें|बनाकर दो)/i.test(clean);
  const buildSubject=/(\b(app|application|project|website|software|tool|dashboard|game|api)\b|ऐप|एप|प्रोजेक्ट|वेबसाइट|सॉफ्टवेयर|टूल|डैशबोर्ड|गेम)/i.test(clean);
  if(buildIntent&&buildSubject&&window.IntelligentCodingAgent){
   try{
