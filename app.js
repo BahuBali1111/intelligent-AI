@@ -8,6 +8,7 @@ const researchAnalyzer=window.IntelligentResearchAnalyzer;
 const researchEngine=window.IntelligentResearchEngine.createResearchEngine();
 const contextStore=window.IntelligentContext.createContextStore(localStorage);
 const assistantBrain=window.IntelligentBrain;
+const selfAwareness=window.IntelligentSelfAwareness;
 let modelClient=window.IntelligentModelClient||null;
 async function ensureModelClient(){
  if(modelClient&&typeof modelClient.connect==="function")return modelClient;
@@ -40,7 +41,7 @@ function tab(id){$$(".tab").forEach(x=>x.classList.toggle("show",x.id===id));$$(
 async function send(t){
  const checked=window.IntelligentCore.validateMessage(t);
  if(!checked.ok){alert(checked.error);return}
- const clean=checked.value,analysis=assistantBrain.understand(clean);analysis.language=lang;const plan={intent:analysis.intent};
+ const clean=checked.value,analysis=assistantBrain.understand(clean);analysis.language=lang;const taskPlan=selfAwareness.splitInput(clean);const plan={intent:analysis.intent};
  messages.push({role:"user",text:clean,at:new Date().toISOString()});contextStore.capture(clean);renderContinuity();
  const pending={role:"assistant",text:lang==="hi"?"सोच रहा हूँ…":"Thinking…",at:new Date().toISOString(),pending:true};
  messages.push(pending);messages=messages.slice(-300);saveMessages();renderMessages();$("#input").value="";
@@ -65,6 +66,7 @@ async function send(t){
  }
  const ghBridge=window.IntelligentGitHubBridge;
  const ghStatusAsk=/(github|git hub|repository|repo).*(status|connected|connection|जुड़ा|कनेक्शन|स्थिति)|(status|connected|connection|जुड़ा|कनेक्शन|स्थिति).*(github|repository|repo)/i.test(clean);
+ const ghSelfAsk=/(what can you do|your capabilities|your features|your limitations|self.?awareness|tumhare andar|tumhare features|tumhari kshamta|apni kshamta|apni kami|तुम्हारे अंदर|तुम्हारी क्षमता|तुम्हारे फीचर|अपनी क्षमता|अपनी कमी|तुम क्या कर सकते हो|तुममें क्या कमी)/i.test(clean);
  const ghListAsk=/(github|git hub|repository|repo|गिटहब|रिपॉजिटरी).*(file|files|list|सूची|फाइल|फ़ाइल|मौजूद|readme|index)|(file|files|list|सूची|फाइल|फ़ाइल|मौजूद|readme|index).*(github|git hub|repository|repo|गिटहब|रिपॉजिटरी)/i.test(clean);
  const ghInspectAsk=/(inspect|review|check|जाँच|जांच|देखो|विश्लेषण).*(github|repository|repo|कोड)|(github|repository|repo|कोड).*(inspect|review|check|जाँच|जांच|देखो|विश्लेषण)/i.test(clean);
  const ghUpdateAsk=/(self.?update|self.?improv|update.*(yourself|your code|repo|github|खुद|कोड)|improve.*(yourself|your code|repo|github|code)|fix.*(your code|repo|github)|खुद.*(अपडेट|सुधार)|कोड.*(सुधार|अपडेट)|github.*(बदलाव|सुधार|अपडेट)|khud.*(update|sudhar)|apne aap.*(update|improve)|repo.*(update|improve|sudhar)|सुधार.*(प्रस्ताव|तैयार|बनाओ)|कमियां.*(सुधार|बताओ)|क्षमताओं.*(सुधार|बढ़ाओ))/i.test(clean);
@@ -72,7 +74,7 @@ async function send(t){
  const ghRunMatch=clean.match(/(?:run|workflow|रन)\s*#?\s*(\d{6,})/i);
  const ghFileAsk=/(?:file|फाइल|फ़ाइल).*(?:read|show|open|inspect|पढ़|दिखा|खोल)|(?:read|show|open|inspect|पढ़ो|दिखाओ|खोलो).*(?:file|फाइल|फ़ाइल)/i.test(clean);
  const ghFileMatch=clean.match(/(?:^|[\s"\x27`])((?:[\w.-]+\/)*[\w.-]+\.(?:js|json|html|css|md|txt|yml|yaml))(?=$|[\s"\x27`,.;:])/i);
- const ghIntent=ghListAsk||ghStatusAsk||ghInspectAsk||ghUpdateAsk||ghActionsAsk||!!ghRunMatch||(ghFileAsk&&!!ghFileMatch);
+ const ghIntent=ghSelfAsk||ghListAsk||ghStatusAsk||ghInspectAsk||ghUpdateAsk||ghActionsAsk||!!ghRunMatch||(ghFileAsk&&!!ghFileMatch);
  if(ghIntent&&!ghBridge){
   pending.text=lang==="hi"?"GitHub चैट ब्रिज इस पेज में लोड नहीं हुआ। यह अनुमति की समस्या नहीं है। पेज को पूरी तरह Refresh करें; यदि फिर भी यही संदेश आए तो ऐप की नई तैनाती जाँचनी होगी।":"The GitHub chat bridge did not load on this page. This is not a GitHub permission denial. Fully refresh the app; if it persists, the app deployment needs checking.";
   delete pending.pending;saveMessages();renderMessages();return;
@@ -81,6 +83,15 @@ async function send(t){
   try{
    if(!ghBridge.isConnected()){
     pending.text=lang==="hi"?"GitHub इस खुले पेज में अभी कनेक्ट नहीं है। Settings में जाकर GitHub Token से Connect करें; फिर चैट में दोबारा कहें।":"GitHub is not connected in this page session. Connect it in Settings, then retry here.";
+   }else if(ghSelfAsk){
+    const snapshot=await ghBridge.inspect();
+    const inventory=selfAwareness.snapshot({repository:ghBridge.repository,branch:"main",files:snapshot.files,modelConnected:!!(modelClient&&modelClient.isConnected()),githubConnected:true,inspectedAt:new Date().toISOString()});
+    if(modelClient&&modelClient.isConnected()){
+     const report=await modelClient.chat([{role:"system",content:"You are Intelligent AI's self-audit analyst. Use only the supplied live repository snapshot and capability manifest. Explain what this project actually contains, distinguish available, partial, planned and external-provider-dependent features, identify real gaps, and never claim an integration works merely because a file exists. Reply in simple Hindi/Hinglish. Do not propose code changes in this response."},{role:"user",content:"Live repository snapshot:\n"+JSON.stringify(snapshot.files.map(x=>({path:x.path,size:x.size,content:x.content})))+"\n\nCapability manifest:\n"+JSON.stringify(inventory)+"\n\nUser question: "+clean}],{maxTokens:1800});
+     pending.text=report.text+"\n\nLive GitHub inspection: "+snapshot.files.length+" files supplied from "+ghBridge.repository+".";
+    }else{
+     pending.text="GitHub se live file snapshot padha gaya.\nRepository: "+ghBridge.repository+"\nFiles: "+snapshot.files.map(x=>x.path).join(", ")+"\n\n"+inventory.features.map(x=>x.name+" — "+x.status+": "+x.detail).join("\n")+"\n\nAI model connected nahi hai, isliye code ka deeper analysis abhi nahi hua.";
+    }
    }else if(ghListAsk){
     const listing=await ghBridge.listRepositoryFiles();
     const names=listing.files.map(file=>(file.type==="dir"?"📁 ":"📄 ")+file.path+(file.size!=null?" ("+file.size+" bytes)":""));
@@ -137,10 +148,10 @@ async function send(t){
  if(modelClient&&modelClient.isConnected()){
   try{
    const history=messages.filter(m=>!m.pending).slice(-14).map(m=>({role:m.role==="assistant"?"assistant":"user",content:m.text}));
-   const system=lang==="hi"
+   const system=(lang==="hi"
     ?"तुम Intelligent AI हो। उपयोगकर्ता से सरल, स्वाभाविक हिंदी या Hinglish में बात करो और उसके सवाल का सीधा, उपयोगी तथा तर्कपूर्ण उत्तर दो। यदि जानकारी निश्चित नहीं है तो साफ बताओ। कोई काल्पनिक टूल-एक्शन या तथ्य मत गढ़ो। कोड बदलने या बाहरी कार्रवाई का दावा तभी करो जब वह वास्तव में किया गया हो।"
-    :"You are Intelligent AI. Answer clearly, naturally and thoughtfully in the user's language. Be accurate, admit uncertainty, and never claim to have used a tool or changed files unless that actually happened.";
-   const result=await modelClient.chat([{role:"system",content:system},...history],{maxTokens:900});
+    :"You are Intelligent AI. Answer clearly, naturally and thoughtfully in the user's language. Be accurate, admit uncertainty, and never claim to have used a tool or changed files unless that actually happened.")+"\n\n"+selfAwareness.systemGuidance(taskPlan,lang)+"\n\n"+(lang==="hi"?"परियोजना की वास्तविक सीमाएँ: लाइव मॉडल बाहरी प्रदाता पर निर्भर है; वेब रिसर्च आंशिक हो सकती है; लोकल मेमोरी इसी ब्राउज़र तक सीमित है; GitHub बदलाव PR और अनुमति से होते हैं।":"Project capability boundaries: live language generation depends on an external provider; web research may be partial; local memory is browser-local; GitHub changes require permission and a pull request.");
+   const result=await modelClient.chat([{role:"system",content:system},...history],{maxTokens:Math.min(3200,1100+taskPlan.tasks.length*220)});
    pending.text=result.text;pending.model=result.model;pending.runtimeSeconds=result.runtimeSeconds;if(result.fallback)$("#modelConnectionStatus").textContent=(lang==="hi"?"स्वचालित बैकअप प्रदाता सक्रिय: ":"Automatic fallback active: ")+result.provider+" · "+result.model;
   }catch(err){
    pending.text=(lang==="hi"?"AI सेवा से जवाब नहीं मिल पाया: ":"Could not get a reply from the AI provider: ")+err.message+(lang==="hi"?" कृपया Settings में सर्वर कनेक्शन जाँचें।":" Please check the server connection in Settings.");
