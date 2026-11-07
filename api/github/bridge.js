@@ -6,6 +6,7 @@ const { session } = require("./_session");
 const OWNER = "BahuBali1111";
 const REPO = "intelligent-AI";
 const FULL = OWNER + "/" + REPO;
+const BASE_BRANCH = "integration/full-build";
 const EDITABLE = new Set([
   "assistant-brain.js", "research-engine.js", "knowledge.js", "memory.js",
   "context-engine.js", "code-workbench.js", "research-analyzer.js", "research-desk.js"
@@ -25,18 +26,32 @@ function cors(req, res) {
   }
 }
 async function github(token, path, options = {}) {
-  const response = await fetch("https://api.github.com" + path, {
-    ...options,
-    headers: { ...GH_HEADERS, Authorization: "Bearer " + token, ...(options.headers || {}) }
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const error = new Error("github_api_error");
-    error.status = response.status;
-    error.detail = data.message || "GitHub API request failed";
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch("https://api.github.com" + path, {
+      ...options,
+      headers: { ...GH_HEADERS, Authorization: "Bearer " + token, ...(options.headers || {}) },
+      signal: controller.signal
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = new Error("github_api_error");
+      error.status = response.status;
+      error.detail = data.message || "GitHub API request failed";
+      throw error;
+    }
+    return data;
+  } catch (error) {
+    if (error && error.name === "AbortError") {
+      error.status = 504;
+      error.message = "github_api_timeout";
+      error.detail = "GitHub API request timed out after 15 seconds.";
+    }
     throw error;
+  } finally {
+    clearTimeout(timer);
   }
-  return data;
 }
 function safePath(value) {
   const path = String(value || "").trim().replace(/^\/+/, "");
@@ -82,12 +97,12 @@ module.exports = async function githubBridge(req, res) {
       });
     }
     if (action === "list") {
-      const entries = await github(token, "/repos/" + FULL + "/contents?ref=main");
+      const entries = await github(token, "/repos/" + FULL + "/contents?ref=" + encodeURIComponent(BASE_BRANCH)");
       const files = (Array.isArray(entries) ? entries : []).map(item => ({
         name: item.name, path: item.path, type: item.type, size: item.size,
         url: item.html_url
       }));
-      return send(res, 200, { repository: FULL, branch: "main", files });
+      return send(res, 200, { repository: FULL, branch: BASE_BRANCH, files });
     }
     if (action === "inspect") {
       const repo = await github(token, "/repos/" + FULL);
@@ -95,7 +110,7 @@ module.exports = async function githubBridge(req, res) {
       const files = [];
       for (const path of paths) {
         try {
-          const file = await github(token, "/repos/" + FULL + "/contents/" + encodeURIComponent(path) + "?ref=main");
+          const file = await github(token, "/repos/" + FULL + "/contents/" + encodeURIComponent(path) + "?ref=" + encodeURIComponent(BASE_BRANCH)");
           if (file.type === "file" && file.content) {
             const content = decodeContent(file.content);
             files.push({ path, sha: file.sha, size: content.length, content: content.slice(0, 4500) });
@@ -104,11 +119,11 @@ module.exports = async function githubBridge(req, res) {
           if (error.status !== 404) throw error;
         }
       }
-      return send(res, 200, { repository: FULL, branch: "main", canWrite: !!repo.permissions?.push, files });
+      return send(res, 200, { repository: FULL, branch: BASE_BRANCH, canWrite: !!repo.permissions?.push, files });
     }
     if (action === "file") {
       const path = safePath(body.path);
-      const ref = String(body.ref || "main").slice(0, 120);
+      const ref = String(body.ref || BASE_BRANCH).slice(0, 120);
       const file = await github(token, "/repos/" + FULL + "/contents/" + encodeURIComponent(path) + "?ref=" + encodeURIComponent(ref));
       if (file.type !== "file" || !file.content) return send(res, 400, { error: "not_a_text_file" });
       const content = decodeContent(file.content);
@@ -160,7 +175,7 @@ module.exports = async function githubBridge(req, res) {
         grouped.set(path, list);
       }
       for (const [path, list] of grouped) {
-        const file = await github(token, "/repos/" + FULL + "/contents/" + encodeURIComponent(path) + "?ref=main");
+        const file = await github(token, "/repos/" + FULL + "/contents/" + encodeURIComponent(path) + "?ref=" + encodeURIComponent(BASE_BRANCH)");
         let content = decodeContent(file.content);
         for (const patch of list) {
           const first = content.indexOf(patch.find);
@@ -171,7 +186,7 @@ module.exports = async function githubBridge(req, res) {
         }
         changes.push({ path, sha: file.sha, content });
       }
-      const main = await github(token, "/repos/" + FULL + "/git/ref/heads/main");
+      const main = await github(token, "/repos/" + FULL + "/git/ref/heads/" + encodeURIComponent(BASE_BRANCH)");
       const branch = "ai-proposal/assistant-" + Date.now().toString(36) + "-" + crypto.randomBytes(3).toString("hex");
       await github(token, "/repos/" + FULL + "/git/refs", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -193,7 +208,7 @@ module.exports = async function githubBridge(req, res) {
         body: JSON.stringify({
           title,
           head: branch,
-          base: "main",
+          base: BASE_BRANCH,
           body: (description || "AI-generated proposal.") + "\n\nSafety: separate branch, allowlisted source files, exact-match patches, no automatic merge or deployment."
         })
       });
@@ -201,7 +216,9 @@ module.exports = async function githubBridge(req, res) {
     }
     return send(res, 400, { error: "unknown_github_action" });
   } catch (error) {
-    const status = [400, 401, 403, 404, 409, 422].includes(error.status) ? error.status : 502;
+    const status = [400, 401, 403, 404, 409, 422, 504].includes(error.status) ? error.status : 502;
     return send(res, status, { error: error.message || "github_bridge_failed", detail: error.detail || undefined });
   }
 };
+
+module.exports.BASE_BRANCH = BASE_BRANCH;
