@@ -41,6 +41,7 @@
     isVerified: () => verified,
     account: () => account,
     verify,
+    permissions: () => call("status"),
     inspect: () => call("inspect"),
     listRepositoryFiles: () => call("list"),
     inspectRepositoryFile: (path, ref = "main") => call("file", { path, ref }),
