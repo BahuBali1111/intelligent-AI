@@ -65,16 +65,23 @@ async function send(t){
  }
  const ghBridge=window.IntelligentGitHubBridge;
  const ghStatusAsk=/(github|git hub|repository|repo).*(status|connected|connection|जुड़ा|कनेक्शन|स्थिति)|(status|connected|connection|जुड़ा|कनेक्शन|स्थिति).*(github|repository|repo)/i.test(clean);
+ const ghListAsk=/(github|git hub|repository|repo|गिटहब|रिपॉजिटरी).*(file|files|list|सूची|फाइल|फ़ाइल|मौजूद|readme|index)|(file|files|list|सूची|फाइल|फ़ाइल|मौजूद|readme|index).*(github|git hub|repository|repo|गिटहब|रिपॉजिटरी)/i.test(clean);
  const ghInspectAsk=/(inspect|review|check|जाँच|जांच|देखो|विश्लेषण).*(github|repository|repo|कोड)|(github|repository|repo|कोड).*(inspect|review|check|जाँच|जांच|देखो|विश्लेषण)/i.test(clean);
  const ghUpdateAsk=/(self.?update|self.?improv|update.*(yourself|your code|repo|github|खुद|कोड)|improve.*(yourself|your code|repo|github|code)|fix.*(your code|repo|github)|खुद.*(अपडेट|सुधार)|कोड.*(सुधार|अपडेट)|github.*(बदलाव|सुधार|अपडेट)|khud.*(update|sudhar)|apne aap.*(update|improve)|repo.*(update|improve|sudhar)|सुधार.*(प्रस्ताव|तैयार|बनाओ)|कमियां.*(सुधार|बताओ)|क्षमताओं.*(सुधार|बढ़ाओ))/i.test(clean);
  const ghActionsAsk=/(github\s*actions|workflow|workflows|build status|deployment status|actions status|एक्शन(्स)?|वर्कफ़्लो|वर्कफ्लो|डिप्लॉयमेंट)/i.test(clean);
  const ghRunMatch=clean.match(/(?:run|workflow|रन)\s*#?\s*(\d{6,})/i);
  const ghFileAsk=/(?:file|फाइल|फ़ाइल).*(?:read|show|open|inspect|पढ़|दिखा|खोल)|(?:read|show|open|inspect|पढ़ो|दिखाओ|खोलो).*(?:file|फाइल|फ़ाइल)/i.test(clean);
  const ghFileMatch=clean.match(/(?:^|[\s"\x27`])((?:[\w.-]+\/)*[\w.-]+\.(?:js|json|html|css|md|txt|yml|yaml))(?=$|[\s"\x27`,.;:])/i);
- if((ghStatusAsk||ghInspectAsk||ghUpdateAsk||ghActionsAsk||ghRunMatch||(ghFileAsk&&ghFileMatch))&&ghBridge){
+ if((ghListAsk||ghStatusAsk||ghInspectAsk||ghUpdateAsk||ghActionsAsk||ghRunMatch||(ghFileAsk&&ghFileMatch))&&ghBridge){
   try{
    if(!ghBridge.isConnected()){
     pending.text=lang==="hi"?"GitHub इस खुले पेज में अभी कनेक्ट नहीं है। Settings में जाकर GitHub Token से Connect करें; फिर चैट में दोबारा कहें।":"GitHub is not connected in this page session. Connect it in Settings, then retry here.";
+   }else if(ghListAsk){
+    const listing=await ghBridge.listRepositoryFiles();
+    const names=listing.files.map(file=>(file.type==="dir"?"📁 ":"📄 ")+file.path+(file.size!=null?" ("+file.size+" bytes)":""));
+    const hasReadme=listing.files.some(file=>file.path==="README.md");
+    const hasIndex=listing.files.some(file=>file.path==="index.html");
+    pending.text=(lang==="hi"?"GitHub से वास्तविक Repository सूची पढ़ी गई।\\nRepository: ":"Live repository listing read from GitHub.\\nRepository: ")+listing.repository+"\\nBranch: "+listing.branch+"\\n\\n"+names.join("\\n")+"\\n\\nREADME.md: "+(hasReadme?"मौजूद / present":"नहीं मिला / not found")+"\\nindex.html: "+(hasIndex?"मौजूद / present":"नहीं मिला / not found")+"\\n\\n"+(lang==="hi"?"केवल पढ़ा है; कोई बदलाव नहीं किया।":"Read-only check; no changes made.");
    }else if(ghRunMatch){
     const detail=await ghBridge.inspectWorkflowRun(ghRunMatch[1]);
     const jobs=detail.jobs.map(job=>job.name+": "+job.status+(job.conclusion?" / "+job.conclusion:"")).join("\n");

@@ -81,6 +81,14 @@ module.exports = async function githubBridge(req, res) {
         canWrite: !!repo.permissions?.push
       });
     }
+    if (action === "list") {
+      const entries = await github(token, "/repos/" + FULL + "/contents?ref=main");
+      const files = (Array.isArray(entries) ? entries : []).map(item => ({
+        name: item.name, path: item.path, type: item.type, size: item.size,
+        url: item.html_url
+      }));
+      return send(res, 200, { repository: FULL, branch: "main", files });
+    }
     if (action === "inspect") {
       const repo = await github(token, "/repos/" + FULL);
       const paths = [...EDITABLE];
