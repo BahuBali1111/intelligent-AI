@@ -66,7 +66,7 @@ async function send(t){
  }
  const ghBridge=window.IntelligentGitHubBridge;
  const ghStatusAsk=/(github|git hub|repository|repo).*(status|connected|connection|जुड़ा|कनेक्शन|स्थिति)|(status|connected|connection|जुड़ा|कनेक्शन|स्थिति).*(github|repository|repo)/i.test(clean);
- const ghSelfAsk=/(what can you do|your capabilities|your features|your limitations|self.?awareness|tumhare andar|tumhare features|tumhari kshamta|apni kshamta|apni kami|तुम्हारे अंदर|तुम्हारी क्षमता|तुम्हारे फीचर|अपनी क्षमता|अपनी कमी|तुम क्या कर सकते हो|तुममें क्या कमी)/i.test(clean);
+ const ghSelfAsk=/(what can you do|your capabilities|your features|your limitations|self.?audit.*(status|report|review)|tumhare andar|tumhare features|tumhari kshamta|apni kshamta|apni kami|तुम्हारे अंदर|तुम्हारी क्षमता|तुम्हारे फीचर|अपनी क्षमता|अपनी कमी|तुम क्या कर सकते हो|तुममें क्या कमी)/i.test(clean);
  const ghListAsk=/(github|git hub|repository|repo|गिटहब|रिपॉजिटरी).*(file|files|list|सूची|फाइल|फ़ाइल|मौजूद|readme|index)|(file|files|list|सूची|फाइल|फ़ाइल|मौजूद|readme|index).*(github|git hub|repository|repo|गिटहब|रिपॉजिटरी)/i.test(clean);
  const ghInspectAsk=/(inspect|review|check|जाँच|जांच|देखो|विश्लेषण).*(github|repository|repo|कोड)|(github|repository|repo|कोड).*(inspect|review|check|जाँच|जांच|देखो|विश्लेषण)/i.test(clean);
  const ghUpdateAsk=/(self.?update|self.?improv|update.*(yourself|your code|repo|github|खुद|कोड)|improve.*(yourself|your code|repo|github|code)|fix.*(your code|repo|github)|खुद.*(अपडेट|सुधार)|कोड.*(सुधार|अपडेट)|github.*(बदलाव|सुधार|अपडेट)|khud.*(update|sudhar)|apne aap.*(update|improve)|repo.*(update|improve|sudhar)|सुधार.*(प्रस्ताव|तैयार|बनाओ)|कमियां.*(सुधार|बताओ)|क्षमताओं.*(सुधार|बढ़ाओ))/i.test(clean);
