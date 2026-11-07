@@ -2,6 +2,8 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { EventEmitter } = require("node:events");
+const { cookies } = require("../api/github/_session");
+const githubBridge = require("../api/github/bridge");
 const { send, allowedOrigin, authorize, readJson } = require("../api/_lib");
 const health = require("../api/health");
 
@@ -83,3 +85,6 @@ test("health endpoint rejects unsupported methods", () => {
   assert.equal(res.statusCode, 405);
   assert.equal(res.headers.Allow, "GET");
 });
+
+test("malformed cookie encoding is ignored without throwing",()=>{const parsed=cookies({headers:{cookie:"good=value; ia_github_session=%E0%A4%A; other=ok"}});assert.equal(parsed.good,"value");assert.equal(parsed.ia_github_session,"");assert.equal(parsed.other,"ok")});
+test("AI GitHub proposals use the integration branch rather than main",()=>{assert.equal(githubBridge.BASE_BRANCH,"integration/full-build")});
