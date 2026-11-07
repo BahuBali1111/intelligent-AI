@@ -338,7 +338,7 @@ async function restoreProviderKeys(){
 }
 async function connectProvider(kind,url,key,status,button){
  button.disabled=true;status.textContent="Checking provider connection…";
- try{const client=await ensureModelClient(),result=await client.connect(url,key);$("#modelConnectionStatus").textContent=(lang==="hi"?"स्वचालित प्रदाता क्रम: ":"Automatic provider order: ")+result.connectedProviders.join(" → ");status.textContent="Connected successfully · "+result.model+" · "+result.provider;return true;}
+ try{const client=await ensureModelClient(),result=await client.connect(url,key);$("#modelConnectionStatus").textContent=(lang==="hi"?"स्वचालित प्रदाता क्रम: ":"Automatic provider order: ")+result.connectedProviders.join(" → ");const ownProvider=result.provider;status.textContent="Connected successfully · "+ownProvider+" · "+result.model;return true;}
  catch(err){status.textContent="Connection failed: "+err.message;return false;}
  finally{button.disabled=false;}
 }
