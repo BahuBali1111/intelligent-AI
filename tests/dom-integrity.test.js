@@ -12,7 +12,7 @@ test("all HTML ids are unique",()=>{
  assert.equal(new Set(ids).size,ids.length);
 });
 test("provider and voice controls are present",()=>{
- for(const id of ["connectGemini","connectGroq","modelConnectButton","modelConnectionMessage","geminiStatus","groqStatus","voiceMic","voiceRead","voiceStop","voiceAuto","voiceStatus","state","codingNotice"]){
+ for(const id of ["connectGemini","connectGroq","modelConnectButton","modelConnectionMessage","geminiStatus","groqStatus","voiceMic","voiceRead","voiceStop","voiceAuto","voiceStatus","state","codingNotice","primaryOpenRouterConnect","primaryProviderStatus"]){
   assert.match(html,new RegExp('id="'+id+'"'));
  }
 });
