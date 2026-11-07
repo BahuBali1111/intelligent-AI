@@ -62,7 +62,7 @@
   }
   function cleanSegment(value) {
     const segment = String(value || "").trim();
-    if (!segment || segment === "." || segment === ".." || /[\/\\\u0000-\u001f]/.test(segment) || segment.length > 120) {
+    if (!segment || segment === "." || segment === ".." || /[\/\\<>:"|?*\u0000-\u001f]/.test(segment) || segment.length > 120) {
       throw new Error("Unsafe folder or file name: " + segment);
     }
     if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(segment)) throw new Error("This file name is reserved by the operating system: " + segment);
@@ -141,7 +141,7 @@
     const written = [];
     for (const item of drafts) written.push(await writeText(project.folder, cleanRelativePath(item.path).join("/"), item.content));
     const readme = ["# " + String(manifest.projectName || "AI Generated Project"), "", String(manifest.summary || ""), "", "## Architecture", "", String(manifest.architecture || ""), "", "## Generated files", "", ...written.map(item => "- " + item.path)].join("\n") + "\n";
-    await writeText(project.folder, "README.md", readme);
+    await writeText(project.folder, written.some(item => item.path.toLowerCase() === "readme.md") ? "WORKSPACE-README.md" : "README.md", readme);
     return { folder: project.path, files: written, readme: true };
   }
   function status() {
