@@ -44,7 +44,7 @@
     permissions: () => call("status"),
     inspect: () => call("inspect"),
     listRepositoryFiles: () => call("list"),
-    inspectRepositoryFile: (path, ref = "main") => call("file", { path, ref }),
+    inspectRepositoryFile: (path, ref = "integration/full-build") => call("file", { path, ref }),
     listWorkflowRuns: (options = {}) => call("runs", { perPage: options.perPage || 8 }),
     inspectWorkflowRun: async runId => ({ ...(await call("run", { runId })), note: "Live data returned by GitHub Actions API." }),
     proposePatches: async (patches, title, body) => {
