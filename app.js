@@ -194,6 +194,21 @@ let activeResearchQuery="";
 
 function downloadText(name,content,type){const blob=new Blob([content],{type:type||"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function renderCodeDrafts(){const root=$("#codeDraftList");if(!root)return;root.replaceChildren();const items=codeWorkbench.list();if(!items.length){const p=document.createElement("p");p.className="empty-state";p.textContent=words[lang].codeEmpty;root.append(p);return}for(const d of items){const card=document.createElement("article"),title=document.createElement("b"),reason=document.createElement("p"),meta=document.createElement("small"),preview=document.createElement("pre"),actions=document.createElement("div");card.className="memory-item";title.textContent=d.path;reason.textContent=d.reason;meta.textContent=words[lang].codeRisk+" · "+d.createdAt;preview.className="code-diff";preview.hidden=true;preview.textContent=codeWorkbench.diff(d.id);actions.className="proposal-actions";const button=(label,fn)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.onclick=fn;actions.append(b)};button(words[lang].codePatch,()=>{preview.hidden=!preview.hidden});button(words[lang].codeExportOne,()=>downloadText("intelligent-ai-"+d.id+".json",codeWorkbench.exportDraft(d.id)));button(words[lang].codeDelete,()=>{codeWorkbench.remove(d.id);renderCodeDrafts()});card.append(title,reason,meta,actions,preview);root.append(card)}}
+async function generateCodingProject(e){
+ e.preventDefault();const button=$("#codeProjectGenerate"),status=$("#codeProjectStatus"),summary=$("#codeProjectSummary");if(button.disabled)return;
+ button.disabled=true;summary.hidden=true;status.textContent=lang==="hi"?"AI प्रोजेक्ट की योजना बना रहा है…":"AI is planning the project…";
+ try{
+  const client=await ensureModelClient();
+  const result=await window.IntelligentCodingAgent.generateProject({client,workbench:codeWorkbench,brief:$("#codeProjectBrief").value,stack:$("#codeProjectStack").value,maxFiles:Number($("#codeProjectFiles").value),onProgress:event=>{status.textContent=event.message||event.stage;}});
+  summary.hidden=false;summary.replaceChildren();const title=document.createElement("b"),description=document.createElement("p"),architecture=document.createElement("p"),files=document.createElement("p");
+  title.textContent=result.manifest.projectName;description.textContent=result.manifest.summary;architecture.textContent=result.manifest.architecture;files.textContent=(lang==="hi"?"तैयार फाइलें: ":"Generated files: ")+result.drafts.map(x=>x.path).join(", ");summary.append(title,description,architecture,files);
+  const workspace=window.IntelligentLocalWorkspace&&window.IntelligentLocalWorkspace.status();
+  if(workspace&&workspace.connected){const saved=await window.IntelligentLocalWorkspace.writeProject(result.manifest,result.drafts.map(item=>({path:item.path,content:item.content})));status.textContent=(lang==="hi"?"पूरा हुआ: ":"Complete: ")+saved.files.length+(lang==="hi"?" फाइलें फोन के Workspace में सेव हुईं: ":" files saved to phone workspace: ")+saved.folder;}
+  else status.textContent=lang==="hi"?"Code Drafts बन गए। फोन में सेव करने के लिए पहले Workspace Folder Connect करें।":"Code drafts generated. Connect a local workspace folder to write project files to your phone.";
+  renderCodeDrafts();
+ }catch(error){status.textContent=(lang==="hi"?"प्रोजेक्ट बनाते समय त्रुटि: ":"Project generation error: ")+String(error&&error.message||error);renderCodeDrafts();}
+ finally{button.disabled=false;}
+}
 function saveCodeDraft(e){e.preventDefault();try{codeWorkbench.create({path:$("#codePath").value,reason:$("#codeReason").value,before:$("#codeBefore").value,after:$("#codeAfter").value});$("#codeDraftForm").reset();$("#codeStatus").textContent=words[lang].codeSaved;renderCodeDrafts()}catch(err){$("#codeStatus").textContent=err.message}}
 function exportCodeDrafts(){downloadText("intelligent-ai-code-drafts.json",codeWorkbench.exportAll())}
 
