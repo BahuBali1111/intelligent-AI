@@ -18,7 +18,7 @@
         throw new TypeError("Plugin must implement register(api), run(input, context) and test().");
       }
       const pendingTools = [];
-      const existingNames = new Set(typeof core.listTools === "function" ? core.listTools().map(tool => tool.name) : []);
+      const existingNames = new Set(typeof core.listTools === "function" ? core.listTools().map(tool => typeof tool === "string" ? tool : tool.name) : []);
       const api = Object.freeze({
         apiVersion: API_VERSION,
         registerTool(name, description, run) {
