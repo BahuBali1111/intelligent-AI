@@ -8,10 +8,15 @@ A modular multilingual AI assistant application, currently delivered as a browse
 - `core.js`: message validation, intent routing and core tool registry.
 - `plugin-system.js` + `plugins/`: explicit, versioned plugin host and examples.
 - `model-client.js`: optional OpenAI-compatible provider adapters; model intelligence depends on the provider/runtime selected by the owner.
+- `coding-agent.js`: multi-file AI coding workflow that plans a project, generates files sequentially, validates paths/output sizes, and saves reviewable local drafts.
 - `research-engine.js`: multi-source public-index search and bounded page reading.
 - `memory.js`, `knowledge.js`, `context-engine.js`: browser-local memory and knowledge.
 - `api/`: Vercel serverless API, including encrypted GitHub OAuth/session and a least-privilege repository bridge.
 - `tests/`: Node built-in test suite.
+
+## AI coding workshop
+
+The Coding Workshop can generate a project plan and then request each planned file from the connected model one at a time (up to 8 files per run). Generated files are stored as local review drafts and can be inspected/exported. This browser workflow does not execute generated code, write to GitHub, or deploy. Run generated tests in a controlled development environment and review all code before integration.
 
 ## Plugin development
 
