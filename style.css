@@ -69,3 +69,4 @@
 @media(max-width:680px){.provider-key-grid{grid-template-columns:1fr}.provider-key-card .model-connect-actions{display:grid;grid-template-columns:1fr 1fr}.provider-key-card .model-connect-actions button:first-child{grid-column:1/-1}}
 
 .chat-voice-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}.chat-voice-tools small{flex:1 1 100%;color:var(--muted);font-size:11px}.chat-voice-tools button{font-size:12px;padding:9px 10px}.chat-voice-tools #sendButton{margin-left:auto}.chat-voice-tools button[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan)}#workspaceStatus{display:block;margin-top:8px;color:var(--cyan)}@media(max-width:600px){.chat-voice-tools{gap:6px}.chat-voice-tools button{padding:8px;font-size:11px}}
+#voiceStatus{display:block;flex:1 1 100%;min-height:18px;color:var(--cyan);font-size:11px;line-height:1.5}.chat-voice-tools button:disabled{opacity:.65;cursor:wait}
