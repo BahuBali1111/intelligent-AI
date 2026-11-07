@@ -9,6 +9,9 @@ const researchEngine=window.IntelligentResearchEngine.createResearchEngine();
 const contextStore=window.IntelligentContext.createContextStore(localStorage);
 const assistantBrain=window.IntelligentBrain;
 const selfAwareness=window.IntelligentSelfAwareness;
+const pluginHost=window.IntelligentPlugins.createPluginHost(window.IntelligentCore);
+window.IntelligentPluginHost=pluginHost;
+if(window.IntelligentExampleEcho)pluginHost.register(window.IntelligentExampleEcho);
 let modelClient=window.IntelligentModelClient||null;
 async function ensureModelClient(){
  if(modelClient&&typeof modelClient.connect==="function")return modelClient;
@@ -211,7 +214,31 @@ function renderKnowledge(){const root=$("#knowledgeResults");if(!root)return;roo
 function addKnowledge(e){e.preventDefault();try{knowledgeStore.add({title:$("#knowledgeName").value,content:$("#knowledgeBody").value,category:$("#knowledgeCategory").value,tags:$("#knowledgeTags").value.split(",").map(x=>x.trim()).filter(Boolean)});$("#knowledgeForm").reset();$("#knowledgeStatus").textContent=words[lang].knowAdded;renderKnowledge()}catch(err){$("#knowledgeStatus").textContent=err.message}}
 function exportKnowledge(){const blob=new Blob([knowledgeStore.exportData()],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="intelligent-ai-knowledge-backup.json";a.click();URL.revokeObjectURL(url)}
 function exportChat(){const lines=messages.map(m=>(m.role==="user"?words[lang].you:words[lang].assistant)+"\\n"+m.text).join("\\n\\n");const blob=new Blob([lines||words[lang].empty],{type:"text/plain;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=words[lang].exportName+".txt";a.click();URL.revokeObjectURL(url)}
-$$("nav button").forEach(b=>b.onclick=()=>tab(b.dataset.tab));$("#lang").onclick=$("#lang2").onclick=changeLang;$("#menu").onclick=()=>$(".layout").classList.toggle("menu-open");$("#newChat").onclick=()=>{messages=[];saveMessages();renderMessages();tab("chat")};$("#form").onsubmit=e=>{e.preventDefault();send($("#input").value)};$("#input").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#form").requestSubmit()}});$("#exportChat").onclick=exportChat;$("#continuityExport").onclick=()=>{exportContinuity();$("#continuityStatus").textContent=words[lang].continuitySaved};$("#continuityClear").onclick=()=>{if(confirm(lang==="hi"?"हाल के निर्देशों का स्थानीय इंडेक्स साफ़ करें? पुष्ट परियोजना नियम सुरक्षित रहेंगे।":"Clear the local recent-instruction index? Confirmed project rules will remain.")){contextStore.clear();renderContinuity();$("#continuityStatus").textContent=words[lang].continuityCleared}};$("#memoryForm").onsubmit=saveMemory;$("#knowledgeForm").onsubmit=addKnowledge;$("#updateProposalForm").onsubmit=createUpdateProposal;$("#updateExport").onclick=exportUpdateLedger;$("#codeDraftForm").onsubmit=saveCodeDraft;$("#codeExportAll").onclick=exportCodeDrafts;$("#researchRun").onclick=prepareResearch;$("#researchAnalyze").onclick=runResearchAnalysis;$("#researchProposal").onclick=createProposalFromResearch;$("#researchSourceForm").onsubmit=saveResearchSource;$("#researchExport").onclick=exportResearch;$("#knowledgeSearch").oninput=renderKnowledge;$("#knowledgeExport").onclick=exportKnowledge;$("#knowledgeClear").onclick=()=>{if(confirm(lang==="hi"?"क्या पूरी ज्ञान लाइब्रेरी हटानी है?":"Delete the entire knowledge library from this device?")){knowledgeStore.clear();renderKnowledge()}};$("#memorySearch").oninput=renderMemory;$("#memoryExport").onclick=exportMemory;$("#memoryClear").onclick=()=>{if(confirm(lang==="hi"?"क्या सभी सेव नोट हटाने हैं?":"Delete all saved notes from this device?")){memoryStore.clear();renderMemory()}};$("#clearChat").onclick=()=>{if(confirm(words[lang].confirm)){messages=[];saveMessages();renderMessages()}};$$("[data-prompt]").forEach(b=>b.onclick=()=>{tab("chat");send(b.dataset.prompt)});$("#auto").checked=localStorage.getItem(AUTO_KEY)==="true";$("#auto").onchange=()=>{localStorage.setItem(AUTO_KEY,$("#auto").checked);language()};const PROVIDER_KEYS={gemini:"ia-provider-gemini",groq:"ia-provider-groq",other:"ia-provider-other"};
+$$("nav button").forEach(b=>b.onclick=()=>tab(b.dataset.tab));$("#lang").onclick=$("#lang2").onclick=changeLang;$("#menu").onclick=()=>$(".layout").classList.toggle("menu-open");$("#newChat").onclick=()=>{messages=[];saveMessages();renderMessages();tab("chat")};const chatForm=$("#form"),chatInput=$("#input"),chatSendButton=chatForm.querySelector('button');
+chatSendButton.type="submit";chatSendButton.id="sendButton";chatSendButton.setAttribute("aria-label","Send message");
+chatForm.addEventListener("submit",async e=>{
+ e.preventDefault();e.stopPropagation();
+ const submitted=chatInput.value;
+ if(!submitted.trim())return;
+ if(chatSendButton.disabled)return;
+ chatSendButton.disabled=true;
+ chatSendButton.setAttribute("aria-busy","true");
+ try{
+  await send(submitted);
+ }catch(error){
+  const message=String(error&&error.message||error||"Unknown chat error");
+  const last=messages[messages.length-1];
+  if(last&&last.pending){last.text=(lang==="hi"?"संदेश भेजने में त्रुटि: ":"Could not send message: ")+message;delete last.pending;}
+  else{
+   if(messages.length===0||messages[messages.length-1].role!=="user"||messages[messages.length-1].text!==submitted.trim())messages.push({role:"user",text:submitted.trim(),at:new Date().toISOString()});
+   messages.push({role:"assistant",text:(lang==="hi"?"संदेश भेजने में त्रुटि: ":"Could not send message: ")+message,at:new Date().toISOString()});
+  }
+  chatInput.value="";saveMessages();renderMessages();
+ }finally{
+  chatSendButton.disabled=false;chatSendButton.removeAttribute("aria-busy");
+  chatInput.focus({preventScroll:true});
+ }
+});$("#input").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#form").requestSubmit()}});$("#exportChat").onclick=exportChat;$("#continuityExport").onclick=()=>{exportContinuity();$("#continuityStatus").textContent=words[lang].continuitySaved};$("#continuityClear").onclick=()=>{if(confirm(lang==="hi"?"हाल के निर्देशों का स्थानीय इंडेक्स साफ़ करें? पुष्ट परियोजना नियम सुरक्षित रहेंगे।":"Clear the local recent-instruction index? Confirmed project rules will remain.")){contextStore.clear();renderContinuity();$("#continuityStatus").textContent=words[lang].continuityCleared}};$("#memoryForm").onsubmit=saveMemory;$("#knowledgeForm").onsubmit=addKnowledge;$("#updateProposalForm").onsubmit=createUpdateProposal;$("#updateExport").onclick=exportUpdateLedger;$("#codeDraftForm").onsubmit=saveCodeDraft;$("#codeExportAll").onclick=exportCodeDrafts;$("#researchRun").onclick=prepareResearch;$("#researchAnalyze").onclick=runResearchAnalysis;$("#researchProposal").onclick=createProposalFromResearch;$("#researchSourceForm").onsubmit=saveResearchSource;$("#researchExport").onclick=exportResearch;$("#knowledgeSearch").oninput=renderKnowledge;$("#knowledgeExport").onclick=exportKnowledge;$("#knowledgeClear").onclick=()=>{if(confirm(lang==="hi"?"क्या पूरी ज्ञान लाइब्रेरी हटानी है?":"Delete the entire knowledge library from this device?")){knowledgeStore.clear();renderKnowledge()}};$("#memorySearch").oninput=renderMemory;$("#memoryExport").onclick=exportMemory;$("#memoryClear").onclick=()=>{if(confirm(lang==="hi"?"क्या सभी सेव नोट हटाने हैं?":"Delete all saved notes from this device?")){memoryStore.clear();renderMemory()}};$("#clearChat").onclick=()=>{if(confirm(words[lang].confirm)){messages=[];saveMessages();renderMessages()}};$$("[data-prompt]").forEach(b=>b.onclick=()=>{tab("chat");send(b.dataset.prompt)});$("#auto").checked=localStorage.getItem(AUTO_KEY)==="true";$("#auto").onchange=()=>{localStorage.setItem(AUTO_KEY,$("#auto").checked);language()};const PROVIDER_KEYS={gemini:"ia-provider-gemini",groq:"ia-provider-groq",other:"ia-provider-other"};
 async function restoreProviderKeys(){
  const savedKeys={};
  for(const [id,key] of [["gemini","geminiKey"],["groq","groqKey"]]){

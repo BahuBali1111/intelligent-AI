@@ -43,12 +43,13 @@
     return true;
   }
   function listTools(){return Array.from(tools.values(),t=>({name:t.name,description:t.description}));}
+  function unregisterTool(name){return tools.delete(String(name||""));}
   function runTool(name,input,context){
     const tool=tools.get(name);
     if(!tool)throw new Error("Tool is not registered: "+name);
     return tool.run(input,context||{});
   }
-  const api={version:"0.1.0-core",MAX_MESSAGE_CHARS,validateMessage,classifyIntent,createPlan,registerTool,listTools,runTool};
+  const api={version:"0.1.0-core",MAX_MESSAGE_CHARS,validateMessage,classifyIntent,createPlan,registerTool,unregisterTool,listTools,runTool};
   if(typeof module!=="undefined"&&module.exports)module.exports=api;
   root.IntelligentCore=api;
 })(typeof globalThis!=="undefined"?globalThis:this);
