@@ -173,6 +173,30 @@ let activeResearchQuery="";
 
 function downloadText(name,content,type){const blob=new Blob([content],{type:type||"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function renderCodeDrafts(){const root=$("#codeDraftList");if(!root)return;root.replaceChildren();const items=codeWorkbench.list();if(!items.length){const p=document.createElement("p");p.className="empty-state";p.textContent=words[lang].codeEmpty;root.append(p);return}for(const d of items){const card=document.createElement("article"),title=document.createElement("b"),reason=document.createElement("p"),meta=document.createElement("small"),preview=document.createElement("pre"),actions=document.createElement("div");card.className="memory-item";title.textContent=d.path;reason.textContent=d.reason;meta.textContent=words[lang].codeRisk+" · "+d.createdAt;preview.className="code-diff";preview.hidden=true;preview.textContent=codeWorkbench.diff(d.id);actions.className="proposal-actions";const button=(label,fn)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.onclick=fn;actions.append(b)};button(words[lang].codePatch,()=>{preview.hidden=!preview.hidden});button(words[lang].codeExportOne,()=>downloadText("intelligent-ai-"+d.id+".json",codeWorkbench.exportDraft(d.id)));button(words[lang].codeDelete,()=>{codeWorkbench.remove(d.id);renderCodeDrafts()});card.append(title,reason,meta,actions,preview);root.append(card)}}
+function renderWorkspaceStatus(){
+ const el=$("#workspaceStatus");if(!el||!window.IntelligentLocalWorkspace)return;
+ const state=window.IntelligentLocalWorkspace.status();
+ el.textContent=state.connected
+  ? (lang==="hi"?"Workspace जुड़ा है: ":"Workspace connected: ")+state.folderName+" · "+(lang==="hi"?"AI अपने आप folders/files बना सकता है":"AI can create folders/files as needed")
+  : (state.supported?(lang==="hi"?"Workspace folder अभी नहीं जुड़ा। पहले Connect करें।":"No workspace folder connected. Connect one first."):(lang==="hi"?"इस Browser में Folder Access उपलब्ध नहीं है।":"Folder access is not supported in this browser."));
+ $("#workspaceConnect").disabled=!state.supported;
+}
+async function connectLocalWorkspace(){
+ const button=$("#workspaceConnect"),status=$("#workspaceStatus");
+ button.disabled=true;
+ try{await window.IntelligentLocalWorkspace.connect();renderWorkspaceStatus();}
+ catch(error){status.textContent=String(error&&error.message||error);}
+ finally{button.disabled=false;}
+}
+async function disconnectLocalWorkspace(){
+ try{await window.IntelligentLocalWorkspace.disconnect();renderWorkspaceStatus();}
+ catch(error){$("#workspaceStatus").textContent=String(error&&error.message||error);}
+}
+async function restoreLocalWorkspace(){
+ if(!window.IntelligentLocalWorkspace)return;
+ await window.IntelligentLocalWorkspace.restore();
+ renderWorkspaceStatus();
+}
 async function generateCodingProject(e){
  e.preventDefault();
  const button=$("#codeProjectGenerate"),status=$("#codeProjectStatus"),summary=$("#codeProjectSummary");
@@ -192,7 +216,13 @@ async function generateCodingProject(e){
   architecture.textContent=result.manifest.architecture;
   files.textContent=(lang==="hi"?"तैयार फाइलें: ":"Generated files: ")+result.drafts.map(x=>x.path).join(", ");
   summary.append(title,description,architecture,files);
-  status.textContent=(lang==="hi"?"पूरा हुआ: ":"Complete: ")+result.drafts.length+(lang==="hi"?" फाइलें स्थानीय Code Drafts में सेव हुईं।":" files saved as local code drafts.");
+  const workspace=window.IntelligentLocalWorkspace&&window.IntelligentLocalWorkspace.status();
+  if(workspace&&workspace.connected){
+   const saved=await window.IntelligentLocalWorkspace.writeProject(result.manifest,result.drafts.map(item=>({path:item.path,content:item.content})));
+   status.textContent=(lang==="hi"?"पूरा हुआ: ":"Complete: ")+saved.files.length+(lang==="hi"?" फाइलें फोन के Workspace में सेव हुईं: ":" files saved to phone workspace: ")+saved.folder;
+  }else{
+   status.textContent=(lang==="hi"?"Code Drafts बन गए। फोन में Files सेव करने के लिए पहले Workspace Folder Connect करें।":"Code drafts generated. Connect a local workspace folder to write project files to your phone.");
+  }
   renderCodeDrafts();
  }catch(error){
   status.textContent=(lang==="hi"?"प्रोजेक्ट बनाते समय त्रुटि: ":"Project generation error: ")+String(error&&error.message||error);
@@ -264,7 +294,7 @@ chatForm.addEventListener("submit",async e=>{
   chatSendButton.disabled=false;chatSendButton.removeAttribute("aria-busy");
   chatInput.focus({preventScroll:true});
  }
-});$("#input").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#form").requestSubmit()}});$("#exportChat").onclick=exportChat;$("#continuityExport").onclick=()=>{exportContinuity();$("#continuityStatus").textContent=words[lang].continuitySaved};$("#continuityClear").onclick=()=>{if(confirm(lang==="hi"?"हाल के निर्देशों का स्थानीय इंडेक्स साफ़ करें? पुष्ट परियोजना नियम सुरक्षित रहेंगे।":"Clear the local recent-instruction index? Confirmed project rules will remain.")){contextStore.clear();renderContinuity();$("#continuityStatus").textContent=words[lang].continuityCleared}};$("#memoryForm").onsubmit=saveMemory;$("#knowledgeForm").onsubmit=addKnowledge;$("#updateProposalForm").onsubmit=createUpdateProposal;$("#updateExport").onclick=exportUpdateLedger;$("#codeProjectForm").onsubmit=generateCodingProject;$("#codeDraftForm").onsubmit=saveCodeDraft;$("#codeExportAll").onclick=exportCodeDrafts;$("#researchRun").onclick=prepareResearch;$("#researchAnalyze").onclick=runResearchAnalysis;$("#researchProposal").onclick=createProposalFromResearch;$("#researchSourceForm").onsubmit=saveResearchSource;$("#researchExport").onclick=exportResearch;$("#knowledgeSearch").oninput=renderKnowledge;$("#knowledgeExport").onclick=exportKnowledge;$("#knowledgeClear").onclick=()=>{if(confirm(lang==="hi"?"क्या पूरी ज्ञान लाइब्रेरी हटानी है?":"Delete the entire knowledge library from this device?")){knowledgeStore.clear();renderKnowledge()}};$("#memorySearch").oninput=renderMemory;$("#memoryExport").onclick=exportMemory;$("#memoryClear").onclick=()=>{if(confirm(lang==="hi"?"क्या सभी सेव नोट हटाने हैं?":"Delete all saved notes from this device?")){memoryStore.clear();renderMemory()}};$("#clearChat").onclick=()=>{if(confirm(words[lang].confirm)){messages=[];saveMessages();renderMessages()}};$$("[data-prompt]").forEach(b=>b.onclick=()=>{tab("chat");send(b.dataset.prompt)});$("#auto").checked=localStorage.getItem(AUTO_KEY)==="true";$("#auto").onchange=()=>{localStorage.setItem(AUTO_KEY,$("#auto").checked);language()};const PROVIDER_KEYS={gemini:"ia-provider-gemini",groq:"ia-provider-groq",other:"ia-provider-other"};
+});$("#input").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#form").requestSubmit()}});$("#exportChat").onclick=exportChat;$("#continuityExport").onclick=()=>{exportContinuity();$("#continuityStatus").textContent=words[lang].continuitySaved};$("#continuityClear").onclick=()=>{if(confirm(lang==="hi"?"हाल के निर्देशों का स्थानीय इंडेक्स साफ़ करें? पुष्ट परियोजना नियम सुरक्षित रहेंगे।":"Clear the local recent-instruction index? Confirmed project rules will remain.")){contextStore.clear();renderContinuity();$("#continuityStatus").textContent=words[lang].continuityCleared}};$("#memoryForm").onsubmit=saveMemory;$("#knowledgeForm").onsubmit=addKnowledge;$("#updateProposalForm").onsubmit=createUpdateProposal;$("#updateExport").onclick=exportUpdateLedger;$("#workspaceConnect").onclick=connectLocalWorkspace;$("#workspaceDisconnect").onclick=disconnectLocalWorkspace;restoreLocalWorkspace();$("#codeProjectForm").onsubmit=generateCodingProject;$("#codeDraftForm").onsubmit=saveCodeDraft;$("#codeExportAll").onclick=exportCodeDrafts;$("#researchRun").onclick=prepareResearch;$("#researchAnalyze").onclick=runResearchAnalysis;$("#researchProposal").onclick=createProposalFromResearch;$("#researchSourceForm").onsubmit=saveResearchSource;$("#researchExport").onclick=exportResearch;$("#knowledgeSearch").oninput=renderKnowledge;$("#knowledgeExport").onclick=exportKnowledge;$("#knowledgeClear").onclick=()=>{if(confirm(lang==="hi"?"क्या पूरी ज्ञान लाइब्रेरी हटानी है?":"Delete the entire knowledge library from this device?")){knowledgeStore.clear();renderKnowledge()}};$("#memorySearch").oninput=renderMemory;$("#memoryExport").onclick=exportMemory;$("#memoryClear").onclick=()=>{if(confirm(lang==="hi"?"क्या सभी सेव नोट हटाने हैं?":"Delete all saved notes from this device?")){memoryStore.clear();renderMemory()}};$("#clearChat").onclick=()=>{if(confirm(words[lang].confirm)){messages=[];saveMessages();renderMessages()}};$$("[data-prompt]").forEach(b=>b.onclick=()=>{tab("chat");send(b.dataset.prompt)});$("#auto").checked=localStorage.getItem(AUTO_KEY)==="true";$("#auto").onchange=()=>{localStorage.setItem(AUTO_KEY,$("#auto").checked);language()};const PROVIDER_KEYS={gemini:"ia-provider-gemini",groq:"ia-provider-groq",other:"ia-provider-other"};
 async function restoreProviderKeys(){
  const savedKeys={};
  for(const [id,key] of [["gemini","geminiKey"],["groq","groqKey"]]){
