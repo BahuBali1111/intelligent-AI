@@ -44,6 +44,7 @@ jobs:
           node --check context-engine.js
           node --check assistant-brain.js
           node --check github-controlled.js
+          node --check api/github/bridge.js
           node --check api/_lib.js
           node --check api/health.js
           node --check api/chat.js
@@ -65,4 +66,5 @@ jobs:
           grep -q 'research-engine.js' index.html
           grep -q 'context-engine.js' index.html
           grep -q 'assistant-brain.js' index.html
+          grep -q 'github-controlled.js' index.html
           for file in core.js memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js research-engine.js context-engine.js assistant-brain.js; do test -s "$file"; done
