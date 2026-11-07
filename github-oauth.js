@@ -1,6 +1,6 @@
 "use strict";
 (() => {
-  const BACKEND = "https://intelligent-ai-backend.vercel.app";
+  const BACKEND = "https://intelligent-ai-backend-5zc8yx7l3-vijay-s-projects-29cd4ca0.vercel.app";
   const KEY = "ia_github_encrypted_session";
   const status = document.getElementById("githubOAuthStatus");
   const connect = document.getElementById("githubOAuthConnect");
@@ -25,7 +25,7 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "status_check_failed");
       status.textContent = data.connected ? "Connected ✓ GitHub account: " + data.account + " · " + data.repository : "Not connected · Authorize GitHub to link this repository.";
-    } catch (_) { status.textContent = "Connection check failed. Please reconnect GitHub once."; }
+    } catch (_) { status.textContent = "Connection check failed at " + BACKEND + ". Check backend deployment and OAuth server settings, then retry."; }
   }
   connect.addEventListener("click", () => { status.textContent = "Opening GitHub authorization…"; });
   disconnect.addEventListener("click", async () => {
