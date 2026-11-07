@@ -353,10 +353,7 @@ async function connectOtherProvider(){
  if($("#rememberOther").checked)localStorage.setItem(PROVIDER_KEYS.other,JSON.stringify({url,key}));else localStorage.removeItem(PROVIDER_KEYS.other);
  await connectProvider("other",url,key,status,button);
 }
-$("#modelConnectButton").onclick=connectOtherProvider;
-$("#primaryOpenRouterConnect").onclick=()=>{tab("settings");$("#modelServerUrl").value=$("#modelServerUrl").value.trim()||"https://openrouter.ai/api/v1";$("#primaryProviderStatus").textContent=lang==="hi"?"OpenRouter कनेक्शन जाँचा जा रहा है…":"Checking OpenRouter connection…";connectOtherProvider().then(()=>{$("#primaryProviderStatus").textContent=$("#modelConnectionMessage").textContent;}).catch(error=>{$("#primaryProviderStatus").textContent=String(error.message||error);});};
-$("#modelServerUrl").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();connectOtherProvider();}});
-$("#modelAccessKey").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();connectOtherProvider();}});
+$("#modelConnectForm").onsubmit=async e=>{e.preventDefault();const url=$("#modelServerUrl").value.trim(),key=$("#modelAccessKey").value.trim(),status=$("#modelConnectionMessage");if(!url||!key){status.textContent="Enter provider URL and API key.";return;}if($("#rememberOther").checked)localStorage.setItem(PROVIDER_KEYS.other,JSON.stringify({url,key}));else localStorage.removeItem(PROVIDER_KEYS.other);await connectProvider("other",url,key,status,$("#modelConnectButton"));};
 
 restoreProviderKeys().catch(err=>{$("#modelConnectionStatus").textContent="Could not restore saved provider connections: "+err.message;});
 function clearModelSessionUI(){

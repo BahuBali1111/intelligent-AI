@@ -1,5 +1,5 @@
 "use strict";
-const CACHE="intelligent-ai-v2.2.0";
+const CACHE="intelligent-ai-v2.3.0";
 const FILES=["./","./index.html","./style.css","./app.js","./core.js","./plugin-system.js","./plugins/example-echo/index.js","./memory.js","./knowledge.js","./update-engine.js","./research-desk.js","./research-analyzer.js","./code-workbench.js","./coding-agent.js","./local-workspace.js","./research-engine.js","./context-engine.js","./self-awareness.js","./assistant-brain.js","./model-client.js","./manifest.json","./service-worker.js","./icon.svg"];
 self.addEventListener("install",event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)));self.skipWaiting()});
 self.addEventListener("activate",event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))));self.clients.claim()});

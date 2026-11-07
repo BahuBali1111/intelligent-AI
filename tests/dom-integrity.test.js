@@ -12,7 +12,9 @@ test("all HTML ids are unique",()=>{
  assert.equal(new Set(ids).size,ids.length);
 });
 test("provider and voice controls are present",()=>{
- for(const id of ["connectGemini","connectGroq","modelConnectButton","modelConnectionMessage","geminiStatus","groqStatus","voiceMic","voiceRead","voiceStop","voiceAuto","voiceStatus","state","codingNotice","primaryOpenRouterConnect","primaryProviderStatus"]){
+ for(const id of ["connectGemini","connectGroq","modelConnectButton","modelConnectionMessage","geminiStatus","groqStatus","voiceMic","voiceRead","voiceStop","voiceAuto","voiceStatus","state","codingNotice"]){
   assert.match(html,new RegExp('id="'+id+'"'));
  }
 });
+
+test("OpenRouter provider button submits through the original form",()=>{assert.match(html,/id="modelConnectForm"[^>]*hidden/);assert.match(html,/id="modelConnectButton" type="submit" form="modelConnectForm"/);assert.match(app,/#modelConnectForm/);});
