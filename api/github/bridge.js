@@ -97,7 +97,7 @@ module.exports = async function githubBridge(req, res) {
       });
     }
     if (action === "list") {
-      const entries = await github(token, "/repos/" + FULL + "/contents?ref=" + encodeURIComponent(BASE_BRANCH)");
+      const entries = await github(token, "/repos/" + FULL + "/contents?ref=" + encodeURIComponent(BASE_BRANCH));
       const files = (Array.isArray(entries) ? entries : []).map(item => ({
         name: item.name, path: item.path, type: item.type, size: item.size,
         url: item.html_url
@@ -110,7 +110,7 @@ module.exports = async function githubBridge(req, res) {
       const files = [];
       for (const path of paths) {
         try {
-          const file = await github(token, "/repos/" + FULL + "/contents/" + encodeURIComponent(path) + "?ref=" + encodeURIComponent(BASE_BRANCH)");
+          const file = await github(token, "/repos/" + FULL + "/contents/" + encodeURIComponent(path) + "?ref=" + encodeURIComponent(BASE_BRANCH));
           if (file.type === "file" && file.content) {
             const content = decodeContent(file.content);
             files.push({ path, sha: file.sha, size: content.length, content: content.slice(0, 4500) });
@@ -175,7 +175,7 @@ module.exports = async function githubBridge(req, res) {
         grouped.set(path, list);
       }
       for (const [path, list] of grouped) {
-        const file = await github(token, "/repos/" + FULL + "/contents/" + encodeURIComponent(path) + "?ref=" + encodeURIComponent(BASE_BRANCH)");
+        const file = await github(token, "/repos/" + FULL + "/contents/" + encodeURIComponent(path) + "?ref=" + encodeURIComponent(BASE_BRANCH));
         let content = decodeContent(file.content);
         for (const patch of list) {
           const first = content.indexOf(patch.find);
@@ -186,11 +186,11 @@ module.exports = async function githubBridge(req, res) {
         }
         changes.push({ path, sha: file.sha, content });
       }
-      const main = await github(token, "/repos/" + FULL + "/git/ref/heads/" + encodeURIComponent(BASE_BRANCH)");
+      const baseRef = await github(token, "/repos/" + FULL + "/git/ref/heads/" + encodeURIComponent(BASE_BRANCH));
       const branch = "ai-proposal/assistant-" + Date.now().toString(36) + "-" + crypto.randomBytes(3).toString("hex");
       await github(token, "/repos/" + FULL + "/git/refs", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ref: "refs/heads/" + branch, sha: main.object.sha })
+        body: JSON.stringify({ ref: "refs/heads/" + branch, sha: baseRef.object.sha })
       });
       for (const change of changes) {
         await github(token, "/repos/" + FULL + "/contents/" + encodeURIComponent(change.path), {
