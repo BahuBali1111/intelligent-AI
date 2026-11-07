@@ -72,7 +72,12 @@ async function send(t){
  const ghRunMatch=clean.match(/(?:run|workflow|रन)\s*#?\s*(\d{6,})/i);
  const ghFileAsk=/(?:file|फाइल|फ़ाइल).*(?:read|show|open|inspect|पढ़|दिखा|खोल)|(?:read|show|open|inspect|पढ़ो|दिखाओ|खोलो).*(?:file|फाइल|फ़ाइल)/i.test(clean);
  const ghFileMatch=clean.match(/(?:^|[\s"\x27`])((?:[\w.-]+\/)*[\w.-]+\.(?:js|json|html|css|md|txt|yml|yaml))(?=$|[\s"\x27`,.;:])/i);
- if((ghListAsk||ghStatusAsk||ghInspectAsk||ghUpdateAsk||ghActionsAsk||ghRunMatch||(ghFileAsk&&ghFileMatch))&&ghBridge){
+ const ghIntent=ghListAsk||ghStatusAsk||ghInspectAsk||ghUpdateAsk||ghActionsAsk||!!ghRunMatch||(ghFileAsk&&!!ghFileMatch);
+ if(ghIntent&&!ghBridge){
+  pending.text=lang==="hi"?"GitHub चैट ब्रिज इस पेज में लोड नहीं हुआ। यह अनुमति की समस्या नहीं है। पेज को पूरी तरह Refresh करें; यदि फिर भी यही संदेश आए तो ऐप की नई तैनाती जाँचनी होगी।":"The GitHub chat bridge did not load on this page. This is not a GitHub permission denial. Fully refresh the app; if it persists, the app deployment needs checking.";
+  delete pending.pending;saveMessages();renderMessages();return;
+ }
+ if(ghIntent&&ghBridge){
   try{
    if(!ghBridge.isConnected()){
     pending.text=lang==="hi"?"GitHub इस खुले पेज में अभी कनेक्ट नहीं है। Settings में जाकर GitHub Token से Connect करें; फिर चैट में दोबारा कहें।":"GitHub is not connected in this page session. Connect it in Settings, then retry here.";
@@ -98,10 +103,13 @@ async function send(t){
     const runs=await ghBridge.listWorkflowRuns({perPage:8});
     pending.text=(lang==="hi"?"हाल के GitHub Actions रन:\n":"Recent GitHub Actions runs:\n")+runs.map(run=>"#"+run.id+" · "+run.name+" · "+run.status+(run.conclusion?" / "+run.conclusion:"")+" · "+run.branch+"\n"+run.url).join("\n\n")+(runs.length?"":"कोई रन नहीं मिला।");
    }else if(ghStatusAsk&&!ghInspectAsk&&!ghUpdateAsk){
-    pending.text=lang==="hi"?"GitHub कनेक्शन सक्रिय है: "+ghBridge.repository+"। चैट से Repository पढ़ने, Actions रन देखने और प्रस्तावित बदलाव PR में भेजने की सुविधा उपलब्ध है।":"GitHub is connected: "+ghBridge.repository+". Chat can inspect repository files, view Actions runs, and create review-only pull requests.";
+    const access=await ghBridge.permissions();
+    pending.text=(lang==="hi"?"GitHub खाता: ":"GitHub account: ")+access.account+"\\n"+(lang==="hi"?"Repository: ":"Repository: ")+access.repository+"\\n"+(lang==="hi"?"पढ़ने की अनुमति: ":"Read access: ")+(access.canRead?"हाँ / Yes":"नहीं / No")+"\\n"+(lang==="hi"?"लिखने की अनुमति: ":"Write access: ")+(access.canWrite?"हाँ / Yes":"नहीं / No")+(access.canWrite?(lang==="hi"?"\\nAI प्रस्तावित बदलाव को नई Branch और PR में भेज सकता है।":"\\nThe assistant can submit a proposed change in a new branch and PR."):(lang==="hi"?"\\nकनेक्शन मौजूद है, लेकिन GitHub खाते को इस Repository में Write access नहीं मिला।":"\\nThe connection exists, but this GitHub account lacks write access to this repository."));
    }else{
     const snapshot=await ghBridge.inspect();
-    if(!ghUpdateAsk){
+    if(ghUpdateAsk&&!snapshot.canWrite){
+     pending.text=lang==="hi"?"GitHub कनेक्ट है, लेकिन इस खाते को Repository में Write permission नहीं मिली। GitHub Settings → Applications में Intelligent AI की अनुमति जाँचें; सही अनुमति मिलने तक कोई बदलाव नहीं किया गया।":"GitHub is connected, but this account does not have write permission for the repository. Check Intelligent AI under GitHub Settings → Applications; no changes were made.";
+    }else if(!ghUpdateAsk){
      pending.text=lang==="hi"?"GitHub Repository जाँच पूरी। पढ़ी गई फाइलें: "+snapshot.files.map(x=>x.path+" ("+x.size+" अक्षर)").join(", ")+". अभी कोई बदलाव नहीं किया।":"Repository inspection complete. Read files: "+snapshot.files.map(x=>x.path+" ("+x.size+" chars)").join(", ")+". No changes were made.";
     }else if(!modelClient||!modelClient.isConnected()){
      pending.text=lang==="hi"?"GitHub जुड़ा है, लेकिन AI मॉडल कनेक्ट नहीं है। Settings में OpenRouter/Qwen कनेक्शन फिर से करें।":"GitHub is connected, but the AI model is not connected. Reconnect OpenRouter/Qwen in Settings.";
