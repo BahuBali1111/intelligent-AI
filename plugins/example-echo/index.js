@@ -19,5 +19,6 @@
       return { sample: result.text };
     }
   };
+  if (typeof module !== "undefined" && module.exports) module.exports = plugin;
   root.IntelligentExampleEcho = Object.freeze(plugin);
 })(typeof globalThis !== "undefined" ? globalThis : this);
