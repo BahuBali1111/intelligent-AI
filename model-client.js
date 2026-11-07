@@ -43,7 +43,7 @@ async function connect(baseUrl,apiKey){
   const check=await fetch(endpoint+"/models",{headers:{Authorization:"Bearer "+key,Accept:"application/json"},cache:"no-store"});
   if(!check.ok)throw new Error(check.status===401||check.status===403?"Gemini API key rejected or API not enabled (HTTP "+check.status+").":"Gemini connection check failed: HTTP "+check.status);
   const data=await check.json();const first=Array.isArray(data.data)?data.data.find(item=>item&&typeof item.id==="string"):null;
-  provider="gemini";model=first?first.id:"gemini-2.5-flash";
+  provider="gemini";model=first?String(first.id).replace(/^models\\//,""):"gemini-2.5-flash";
  }else{
   const health=await fetch(base+"/health",{method:"GET",headers:{Accept:"application/json"},cache:"no-store"});
   if(!health.ok)throw new Error("Runtime health check failed: HTTP "+health.status);
@@ -96,7 +96,7 @@ async function chat(messages,options){
      const raw=await response.text();let data={};
      try{data=raw?JSON.parse(raw):{}}catch{throw new Error("AI provider returned invalid JSON (HTTP "+response.status+").")}
      if(!response.ok){
-      const detail=(data.error&&data.error.message)||data.detail||data.message||("HTTP "+response.status);
+      const detail=(data.error&&data.error.message)||data.detail||data.message||(raw?raw.slice(0,300):"HTTP "+response.status);
       diagnostics.push(label(providerConfig.provider)+": "+detail+" (HTTP "+response.status+")");
       break;
      }
