@@ -34,7 +34,7 @@ module.exports = async (req,res) => {
     res.statusCode=302;
     res.setHeader("Cache-Control","no-store, no-cache, must-revalidate");
     res.setHeader("Referrer-Policy","no-referrer");
-    res.setHeader("Location","https://bahubali1111.github.io/intelligent-AI/#github_session="+encodeURIComponent(ticket));
+    res.setHeader("Location","https://bahubali1111.github.io/intelligent-AI/github-return.html#github_session="+encodeURIComponent(ticket));
     res.end();
   } catch (_) { return send(res,502,{error:"github_oauth_callback_failed"}); }
 };
