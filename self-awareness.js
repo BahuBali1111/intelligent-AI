@@ -47,7 +47,7 @@ function systemGuidance(plan,language){
  const tasks=plan&&Array.isArray(plan.tasks)?plan.tasks:[];
  const taskList=tasks.map(t=>t.index+". "+t.text).join("\n");
  return (language==="hi"?"अनुरोध-विभाजन:\n":"Request breakdown:\n")+
- (tasks.length>1?(language==="hi"?"उपयोगकर्ता के संदेश में कई उप-कार्य हैं। हर उप-कार्य को क्रम से समझो और किसी को छोड़े बिना उत्तर दो:\n":"The user message contains multiple sub-tasks. Address each in order and do not silently omit any:\n")+taskList:"यह एक मुख्य कार्य है; अनावश्यक रूप से छोटे टुकड़े मत बनाओ.")+
+ (tasks.length>1?(language==="hi"?"उपयोगकर्ता के संदेश में कई उप-कार्य हैं। हर उप-कार्य को क्रम से समझो और किसी को छोड़े बिना उत्तर दो:\n":"The user message contains multiple sub-tasks. Address each in order and do not silently omit any:\n")+taskList:(language==="hi"?"यह एक मुख्य कार्य है; अनावश्यक रूप से छोटे टुकड़े मत बनाओ.":"This is one main task; do not split it unnecessarily."))+
  "\nKeep all original constraints. If one part depends on another, state the dependency. If the request exceeds available tools or context, complete the feasible parts and clearly identify the remainder. Never claim a tool action, test, merge or deployment that did not actually happen.";
 }
 function describe(options){return snapshot(options)}
