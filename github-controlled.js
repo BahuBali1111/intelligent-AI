@@ -6,10 +6,10 @@
   const REPO = "intelligent-AI";
   let verified = false;
   let account = null;
-  function ticket() { try { return sessionStorage.getItem(KEY) || ""; } catch (_) { return ""; } }
+  function ticket() { try { return localStorage.getItem(KEY) || ""; } catch (_) { return ""; } }
   async function call(action, payload = {}) {
     const value = ticket();
-    if (!value) throw new Error("GitHub OAuth session ticket is missing. Open Settings and reconnect GitHub.");
+    if (!value) throw new Error("GitHub OAuth session ticket is missing. Open Settings and connect GitHub.");
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 15000);
     try {
@@ -55,4 +55,5 @@
     const status = document.getElementById("githubOAuthStatus");
     if (status && ok) status.textContent = "Connected ✓ GitHub account: " + account + " · " + bridge.repository;
   });
+  window.addEventListener("storage", event => { if (event.key === KEY) verify(); });
 })();
