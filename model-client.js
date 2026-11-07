@@ -59,7 +59,7 @@ async function connect(baseUrl,apiKey){
  const entry={baseUrl:endpoint,apiKey:key,connected:true,provider,model,freeModels};
  providers=providers.filter(item=>item.provider!==provider);
  providers.push(entry);setActive();
- return {model:config.model,provider:label(config.provider),connectedProviders:providers.map(item=>label(item.provider))};
+ const connectedEntry=providers.find(item=>item.provider===provider);return {model:connectedEntry.model,provider:label(connectedEntry.provider),connectedProviders:providers.map(item=>label(item.provider))};
 }
 function forget(provider){
  providers=providers.filter(item=>item.provider!==provider);
