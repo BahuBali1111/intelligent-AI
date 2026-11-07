@@ -18,7 +18,7 @@ jobs:
       - name: Check required application files
         run: |
           set -eu
-          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js coding-agent.js local-workspace.js research-engine.js context-engine.js assistant-brain.js coding-agent.js plugin-system.js plugins/example-echo/index.js tests/plugin-system.test.js tests/assistant-brain.test.js tests/context-engine.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/coding-agent.test.js tests/research-engine.test.js tests/model-client.test.js; do
+          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js coding-agent.js local-workspace.js research-engine.js context-engine.js assistant-brain.js coding-agent.js plugin-system.js plugins/example-echo/index.js tests/plugin-system.test.js tests/assistant-brain.test.js tests/context-engine.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/coding-agent.test.js tests/local-workspace.test.js tests/research-engine.test.js tests/model-client.test.js; do
             test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
           done
       - name: Validate JavaScript syntax
@@ -69,6 +69,7 @@ jobs:
           grep -q 'research-analyzer.js' index.html
           grep -q 'code-workbench.js' index.html
           grep -q 'coding-agent.js' index.html
+          grep -q 'local-workspace.js' index.html
           grep -q 'research-engine.js' index.html
           grep -q 'context-engine.js' index.html
           grep -q 'assistant-brain.js' index.html
