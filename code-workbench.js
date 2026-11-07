@@ -8,7 +8,7 @@ function create(input){if(!input||typeof input!=="object")throw new Error("Draft
 function list(){return read().sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))}
 function get(id){return list().find(x=>x.id===id)||null}
 function remove(id){const items=read(),next=items.filter(x=>x.id!==id);write(next);return next.length!==items.length}
-function diff(id){const d=get(id);if(!d)throw new Error("Code draft not found.");const old=d.before?d.before.split("\n"):[],neu=d.after?d.after.split("\n"):[],out=["--- a/"+d.path,"+++ b/"+d.path];for(const line of old)out.push("-"+line);for(const line of neu)out.push("+"+line);return out.join("\n")}
+function diff(id){const d=get(id);if(!d)throw new Error("Code draft not found.");const old=d.before?d.before.split("\n"):[],neu=d.after?d.after.split("\n"):[],out=["--- a/"+d.path,"+++ b/"+d.path,"@@ -1,"+old.length+" +1,"+neu.length+" @@"];for(const line of old)out.push("-"+line);for(const line of neu)out.push("+"+line);return out.join("\n")}
 function exportDraft(id){const d=get(id);if(!d)throw new Error("Code draft not found.");return JSON.stringify({format:"intelligent-ai-code-draft-v1",exportedAt:new Date().toISOString(),draft:d,patch:diff(id)},null,2)}
 function exportAll(){return JSON.stringify({format:"intelligent-ai-code-workbench-v1",exportedAt:new Date().toISOString(),drafts:list()},null,2)}
 return {create,list,get,remove,diff,exportDraft,exportAll}}
