@@ -53,7 +53,7 @@ jobs:
           node --check api/_lib.js
           node --check api/health.js
           node --check api/chat.js
-          node --test tests/plugin-system.test.js tests/backend.test.js tests/model-client.test.js tests/core.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/research-engine.test.js tests/context-engine.test.js tests/assistant-brain.test.js
+          node --test tests/plugin-system.test.js tests/backend.test.js tests/model-client.test.js tests/core.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/coding-agent.test.js tests/local-workspace.test.js tests/research-engine.test.js tests/context-engine.test.js tests/assistant-brain.test.js
       - name: Validate JSON manifest
         run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
       - name: Check core page references
