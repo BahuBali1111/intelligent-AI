@@ -43,7 +43,7 @@ async function connect(baseUrl,apiKey){
   const check=await fetch(endpoint+"/models",{headers:{Authorization:"Bearer "+key,Accept:"application/json"},cache:"no-store"});
   if(!check.ok)throw new Error(check.status===401||check.status===403?"Gemini API key rejected or API not enabled (HTTP "+check.status+").":"Gemini connection check failed: HTTP "+check.status);
   const data=await check.json();const first=Array.isArray(data.data)?data.data.find(item=>item&&typeof item.id==="string"):null;
-  provider="gemini";model=first?String(first.id).replace(/^models\\//,""):"gemini-2.5-flash";
+  provider="gemini";model=first?String(first.id).replace(/^models\//,""):"gemini-2.5-flash";
  }else{
   const health=await fetch(base+"/health",{method:"GET",headers:{Accept:"application/json"},cache:"no-store"});
   if(!health.ok)throw new Error("Runtime health check failed: HTTP "+health.status);
