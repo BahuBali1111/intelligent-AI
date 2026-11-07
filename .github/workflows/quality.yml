@@ -2,7 +2,7 @@ name: Intelligent AI quality checks
 
 on:
   push:
-    branches: ["main", "develop"]
+    branches: ["main", "develop", "integration/full-build"]
   pull_request:
   workflow_dispatch:
 
@@ -18,7 +18,7 @@ jobs:
       - name: Check required application files
         run: |
           set -eu
-          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js research-engine.js context-engine.js assistant-brain.js tests/assistant-brain.test.js tests/context-engine.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/research-engine.test.js tests/model-client.test.js; do
+          for file in index.html style.css app.js manifest.json service-worker.js icon.svg README.md docs/PROJECT-VISION.md docs/ARCHITECTURE.md docs/ROADMAP.md docs/SELF-UPDATE.md docs/AI-GATEWAY.md memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js research-engine.js context-engine.js assistant-brain.js plugin-system.js plugins/example-echo/index.js tests/plugin-system.test.js tests/assistant-brain.test.js tests/context-engine.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/research-engine.test.js tests/model-client.test.js; do
             test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
           done
       - name: Validate JavaScript syntax
@@ -32,6 +32,9 @@ jobs:
           test -s api/chat.js
           test -s tests/backend.test.js
           node --check app.js
+          node --check plugin-system.js
+          node --check plugins/example-echo/index.js
+          node --check plugins/plugin-template/index.js
           node --check model-client.js
           node --check core.js
           node --check memory.js
@@ -48,7 +51,7 @@ jobs:
           node --check api/_lib.js
           node --check api/health.js
           node --check api/chat.js
-          node --test tests/backend.test.js tests/model-client.test.js tests/core.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/research-engine.test.js tests/context-engine.test.js tests/assistant-brain.test.js
+          node --test tests/plugin-system.test.js tests/backend.test.js tests/model-client.test.js tests/core.test.js tests/memory.test.js tests/knowledge.test.js tests/update-engine.test.js tests/research-desk.test.js tests/research-analyzer.test.js tests/code-workbench.test.js tests/research-engine.test.js tests/context-engine.test.js tests/assistant-brain.test.js
       - name: Validate JSON manifest
         run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'))"
       - name: Check core page references
@@ -67,4 +70,9 @@ jobs:
           grep -q 'context-engine.js' index.html
           grep -q 'assistant-brain.js' index.html
           grep -q 'github-controlled.js' index.html
+          grep -q 'plugin-system.js' index.html
+          grep -q 'plugins/example-echo/index.js' index.html
+          test -s CONTRIBUTING.md
+          test -s plugins/README.md
+          test -s plugins/plugin-template/index.js
           for file in core.js memory.js knowledge.js update-engine.js research-desk.js research-analyzer.js code-workbench.js research-engine.js context-engine.js assistant-brain.js; do test -s "$file"; done

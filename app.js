@@ -9,6 +9,9 @@ const researchEngine=window.IntelligentResearchEngine.createResearchEngine();
 const contextStore=window.IntelligentContext.createContextStore(localStorage);
 const assistantBrain=window.IntelligentBrain;
 const selfAwareness=window.IntelligentSelfAwareness;
+const pluginHost=window.IntelligentPlugins.createPluginHost(window.IntelligentCore);
+window.IntelligentPluginHost=pluginHost;
+if(window.IntelligentExampleEcho)pluginHost.register(window.IntelligentExampleEcho);
 let modelClient=window.IntelligentModelClient||null;
 async function ensureModelClient(){
  if(modelClient&&typeof modelClient.connect==="function")return modelClient;
