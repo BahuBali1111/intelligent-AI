@@ -43,7 +43,7 @@ test("OpenRouter free fallback list excludes paid model IDs",async()=>{
  assert.deepEqual(Array.from(request.models),["free/one:free","free/two"]);
 });
 test("forgetting one provider leaves the other connected",async()=>{
- const c=harness(async(url)=>({ok:true,json:async()=>({data:[{id:"model-a"}]})}));
+ const c=harness(async(url,opts)=>url.endsWith("/models")?({ok:true,json:async()=>({data:[{id:"model-a"}]})}):({ok:true,json:async()=>({choices:[{message:{content:"OK"}}]})}));
  await c.connect("https://api.groq.com/openai/v1","groq-key");
  await c.connect("https://generativelanguage.googleapis.com/v1beta/openai","gemini-key");
  c.forget("gemini");
