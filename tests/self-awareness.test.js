@@ -1,0 +1,7 @@
+"use strict";
+const test=require("node:test"),assert=require("node:assert/strict"),self=require("../self-awareness.js");
+test("splits explicit numbered multi-part requests",()=>{const p=self.splitInput("1. पहले repository पढ़ो\n2. कमियाँ खोजो\n3. tests चलाओ");assert.equal(p.tasks.length,3);assert.equal(p.isMultiPart,true);assert.match(p.tasks[1].text,/कमियाँ/);});
+test("splits long messages into bounded chunks without losing the source",()=>{const text=Array.from({length:10},(_,i)=>"कार्य "+(i+1)+" की जाँच करो और उसका परिणाम बताओ।").join(" ");const p=self.splitInput(text,{maxChars:180});assert.ok(p.tasks.length>1);assert.equal(p.original,text);assert.ok(p.tasks.every(x=>x.text.length<=220));});
+test("keeps a short single request as one task",()=>{const p=self.splitInput("नमस्ते, मेरी मदद करो।");assert.equal(p.tasks.length,1);assert.equal(p.isMultiPart,false);});
+test("reports real project capability boundaries",()=>{const s=self.snapshot({repository:"BahuBali1111/intelligent-AI",files:[{path:"app.js"},{path:"research-engine.js"}],modelConnected:true,githubConnected:true,inspectedAt:new Date().toISOString()});assert.equal(s.fileCount,2);assert.equal(s.modelConnected,true);assert.ok(s.features.some(x=>x.id==="self-update"&&x.status==="guarded-prototype"));assert.ok(s.limitations.length>=4);});
+test("system guidance preserves every subtask in order",()=>{const p=self.splitInput("1. Search sources\n2. Compare results");const g=self.systemGuidance(p,"en");assert.match(g,/1\. Search sources/);assert.match(g,/2\. Compare results/);});
