@@ -50,8 +50,36 @@ function systemGuidance(plan,language){
  (tasks.length>1?(language==="hi"?"उपयोगकर्ता के संदेश में कई उप-कार्य हैं। हर उप-कार्य को क्रम से समझो और किसी को छोड़े बिना उत्तर दो:\n":"The user message contains multiple sub-tasks. Address each in order and do not silently omit any:\n")+taskList:(language==="hi"?"यह एक मुख्य कार्य है; अनावश्यक रूप से छोटे टुकड़े मत बनाओ.":"This is one main task; do not split it unnecessarily."))+
  "\nKeep all original constraints. If one part depends on another, state the dependency. If the request exceeds available tools or context, complete the feasible parts and clearly identify the remainder. Never claim a tool action, test, merge or deployment that did not actually happen.";
 }
+
+async function executePlan(options){
+ const o=options||{},plan=o.plan||{tasks:[]},tasks=Array.isArray(plan.tasks)?plan.tasks:[],chat=o.chat,history=Array.isArray(o.history)?o.history:[],language=o.language||"en",baseSystem=String(o.system||"");
+ if(typeof chat!=="function")throw new Error("A connected chat function is required.");
+ if(tasks.length<=1)return chat([{role:"system",content:baseSystem},...history],{maxTokens:1600});
+ const completed=[];let lastResult=null,failed=null;
+ const total=tasks.length;
+ for(let index=0;index<total;index++){
+  const task=tasks[index];
+  if(typeof o.onProgress==="function")o.onProgress(language==="hi"?"चरण "+(index+1)+"/"+total+" समझकर हल किया जा रहा है…":"Working through step "+(index+1)+"/"+total+"…");
+  const prior=completed.map(item=>"STEP "+item.index+": "+item.task+"\nRESULT: "+item.result.slice(0,2200)).join("\n\n");
+  const taskSystem=baseSystem+"\n\n"+(language==="hi"?"कार्य निष्पादन निर्देश: नीचे दिए गए मूल संदेश के संदर्भ में केवल वर्तमान उप-कार्य पर ध्यान दो। पहले के चरणों के परिणाम उपयोग करो। यदि कोई जानकारी उपलब्ध नहीं है तो अनुमान मत लगाओ। इस चरण का स्पष्ट और उपयोगी परिणाम दो।":"Task execution instructions: Focus on the current subtask in the context of the complete original message. Use earlier step results where relevant. Do not invent unavailable information. Return a clear, useful result for this step.")+"\n\nORIGINAL USER REQUEST:\n"+plan.original+"\n\nCURRENT SUBTASK ("+(index+1)+"/"+total+"):\n"+task.text+"\n\nPREVIOUS STEP RESULTS:\n"+(prior||"(none)");
+  try{
+   lastResult=await chat([{role:"system",content:taskSystem},...history],{maxTokens:1100});
+   completed.push({index:index+1,task:task.text,result:String(lastResult.text||"")});
+  }catch(error){failed={index:index+1,task:task.text,error:String(error&&error.message||error)};break}
+ }
+ if(typeof o.onProgress==="function")o.onProgress(language==="hi"?"पूरे किए गए चरणों को जोड़कर अंतिम उत्तर तैयार हो रहा है…":"Combining completed steps into a final answer…");
+ if(!completed.length)return {text:(language==="hi"?"कोई चरण पूरा नहीं हो सका। ":"No step could be completed. ")+(failed?failed.error:""),model:lastResult&&lastResult.model||null,partial:true,steps:[]};
+ const results=completed.map(x=>"STEP "+x.index+" — "+x.task+"\n"+x.result).join("\n\n");
+ const synthesisSystem=(language==="hi"?"तुम Intelligent AI के समेकन विशेषज्ञ हो। नीचे दिए गए चरणों के परिणामों को एक स्पष्ट, क्रमबद्ध और पूर्ण उत्तर में जोड़ो। दोहराव हटाओ, विरोधाभास बताओ, कोई नतीजा मत गढ़ो। यदि कोई चरण विफल हुआ है तो साफ बताओ कि कौन-सा हिस्सा अधूरा है।":"You are Intelligent AI's synthesis specialist. Combine the step results into one clear, ordered and complete answer. Remove repetition, flag contradictions, and do not invent conclusions. If a step failed, clearly state which part remains incomplete.")+"\n\nORIGINAL USER REQUEST:\n"+plan.original+"\n\nCOMPLETED STEP RESULTS:\n"+results+"\n\n"+(failed?"FAILED STEP "+failed.index+": "+failed.task+"\nERROR: "+failed.error:"All planned steps returned results.");
+ try{
+  const final=await chat([{role:"system",content:synthesisSystem},{role:"user",content:"Prepare the final answer in "+(language==="hi"?"Hindi/Hinglish":"the user's language")+". Preserve all requirements and explicitly identify any uncertainty.\n\n"+plan.original}],{maxTokens:2200});
+  return {text:String(final.text||"")+(failed?"\n\n"+(language==="hi"?"ध्यान दें: चरण "+failed.index+" अधूरा रहा — "+failed.error:"Note: step "+failed.index+" remains incomplete — "+failed.error):""),model:final.model,runtimeSeconds:final.runtimeSeconds,fallback:final.fallback,partial:!!failed,steps:completed.map(x=>x.index)};
+ }catch(error){
+  return {text:results+(failed?"\n\nINCOMPLETE STEP "+failed.index+": "+failed.error:"")+"\n\n"+(language==="hi"?"अंतिम समेकन कॉल विफल हुआ; ऊपर चरणवार परिणाम दिए गए हैं।":"The final synthesis call failed; the step-by-step results are shown above."),model:lastResult&&lastResult.model||null,partial:true,steps:completed.map(x=>x.index)};
+ }
+}
 function describe(options){return snapshot(options)}
-const api={VERSION,FEATURES,splitInput,snapshot,systemGuidance,describe};
+const api={VERSION,FEATURES,splitInput,snapshot,systemGuidance,executePlan,describe};
 if(typeof module!=="undefined"&&module.exports)module.exports=api;
 root.IntelligentSelfAwareness=api;
 })(typeof globalThis!=="undefined"?globalThis:this);
