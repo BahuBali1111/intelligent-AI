@@ -26,7 +26,7 @@
 - Never commit API keys, tokens, private user data or local environment files.
 - Do not use `eval`, `new Function`, shell execution, or remote script loading.
 - Treat model output, web pages and plugin input as untrusted data.
-- Request the smallest required capability. Plugins do not inherit privileged GitHub access.
-- Avoid breaking changes to `core.js`; extend through the versioned plugin host.
+- Plugin API objects do not pass GitHub credentials, but same-origin plugin scripts are not sandboxed and can access page globals. Treat plugins as trusted code; never load unreviewed plugins.
+- Avoid breaking changes to `core.js`; extend through the versioned plugin host. Plugin unregister must remove every registered tool and failed registration must roll back cleanly.
 - Document external network calls, third-party data sharing, licensing, quota and possible costs.
 - Production changes require explicit human approval and a separate release process.

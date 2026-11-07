@@ -8,6 +8,7 @@ function fakeCore(){
  const tools=new Map();
  return {
   registerTool(tool){if(tools.has(tool.name))throw new Error("duplicate tool");tools.set(tool.name,tool.run);},
+  unregisterTool(name){return tools.delete(name)},
   async runTool(name,input,context){if(!tools.has(name))throw new Error("missing tool");return tools.get(name)(input,context||{});},
   listTools(){return [...tools.keys()];}
  };
@@ -46,10 +47,13 @@ test("runs plugin tests and reports failures without hiding them",async()=>{
  assert.equal(result.failed,1);
  assert.equal(result.results.find(x=>x.id==="broken-test").passed,false);
 });
-test("unregisters a plugin and refuses future runs",async()=>{
- const host=createPluginHost(fakeCore());
+test("unregisters a plugin and removes its core tools",async()=>{
+ const core=fakeCore(),host=createPluginHost(core);
  host.register(echo);
  assert.equal(host.unregister("example-echo"),true);
  assert.equal(host.unregister("example-echo"),false);
  await assert.rejects(()=>host.run("example-echo","hello"),/not registered/);
+ await assert.rejects(()=>core.runTool("plugin.example-echo.echo","hello"),/missing tool/);
 });
+
+test("rolls back tools when plugin registration throws",()=>{const core=fakeCore(),host=createPluginHost(core);assert.throws(()=>host.register({id:"bad-registration",register(api){api.registerTool("temp","temporary",()=>true);throw new Error("registration failed")},run(){},test(){return true}}),/registration failed/);assert.deepEqual(core.listTools(),[])});

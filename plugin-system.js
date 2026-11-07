@@ -4,8 +4,8 @@
   const ID_PATTERN = /^[a-z][a-z0-9-]{1,63}$/;
 
   function createPluginHost(core) {
-    if (!core || typeof core.registerTool !== "function" || typeof core.runTool !== "function") {
-      throw new TypeError("A compatible IntelligentCore instance is required.");
+    if (!core || typeof core.registerTool !== "function" || typeof core.runTool !== "function" || typeof core.unregisterTool !== "function") {
+      throw new TypeError("A compatible IntelligentCore instance with tool removal is required.");
     }
     const plugins = new Map();
 
@@ -18,7 +18,7 @@
         throw new TypeError("Plugin must implement register(api), run(input, context) and test().");
       }
       const pendingTools = [];
-      const existingNames = new Set(typeof core.listTools === "function" ? core.listTools().map(tool => tool.name) : []);
+      const existingNames = new Set(typeof core.listTools === "function" ? core.listTools().map(tool => typeof tool === "string" ? tool : tool.name) : []);
       const api = Object.freeze({
         apiVersion: API_VERSION,
         registerTool(name, description, run) {
@@ -37,6 +37,7 @@
         if (dispose && typeof dispose.then === "function") throw new TypeError("Plugin register(api) must be synchronous.");
         for (const tool of pendingTools) core.registerTool(tool);
       } catch (error) {
+        for (const tool of pendingTools) core.unregisterTool(tool.name);
         throw new Error("Plugin registration failed (" + id + "): " + String(error && error.message || error));
       }
       const tools = pendingTools.map(tool => tool.name);
@@ -89,8 +90,12 @@
     function unregister(id) {
       const plugin = plugins.get(String(id || ""));
       if (!plugin) return false;
-      if (plugin.dispose) plugin.dispose();
+      let disposeError = null;
+      try { if (plugin.dispose) plugin.dispose(); }
+      catch (error) { disposeError = error; }
+      for (const name of plugin.tools) core.unregisterTool(name);
       plugins.delete(plugin.id);
+      if (disposeError) throw new Error("Plugin disposal failed (" + plugin.id + "): " + String(disposeError.message || disposeError));
       return true;
     }
 
