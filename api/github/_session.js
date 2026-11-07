@@ -23,9 +23,16 @@ function open(value) {
   } catch (_) { return null; }
 }
 function cookies(req) {
-  return Object.fromEntries(String(req.headers.cookie || "").split(";").map(v => v.trim()).filter(Boolean).map(v => {
-    const i=v.indexOf("="); return [v.slice(0,i), decodeURIComponent(v.slice(i+1))];
-  }));
+  const result = {};
+  for (const item of String(req.headers.cookie || "").split(";")) {
+    const value = item.trim();
+    const index = value.indexOf("=");
+    if (index <= 0) continue;
+    const name = value.slice(0, index);
+    try { result[name] = decodeURIComponent(value.slice(index + 1)); }
+    catch (_) { result[name] = ""; }
+  }
+  return result;
 }
 function setCookie(res, name, value, maxAge, sameSite="Lax") {
   const line = name+"="+encodeURIComponent(value)+"; Path=/api/github; HttpOnly; Secure; SameSite="+sameSite+"; Max-Age="+maxAge;
