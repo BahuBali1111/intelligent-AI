@@ -40,10 +40,12 @@ async function connect(baseUrl,apiKey){
   provider="groq";model=(data.data.find(item=>item&&typeof item.id==="string")||{}).id||"openai/gpt-oss-120b";
  }else if(host==="generativelanguage.googleapis.com"){
   endpoint="https://generativelanguage.googleapis.com/v1beta/openai";
-  const check=await fetch(endpoint+"/models",{headers:{Authorization:"Bearer "+key,Accept:"application/json"},cache:"no-store"});
-  if(!check.ok)throw new Error(check.status===401||check.status===403?"Gemini API key rejected or API not enabled (HTTP "+check.status+").":"Gemini connection check failed: HTTP "+check.status);
-  const data=await check.json();const first=Array.isArray(data.data)?data.data.find(item=>item&&typeof item.id==="string"):null;
-  provider="gemini";model=first?first.id:"gemini-2.5-flash";
+  model="gemini-2.5-flash";
+  const check=await fetch(endpoint+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+key,Accept:"application/json"},body:JSON.stringify({model,messages:[{role:"user",content:"Reply with the single word OK."}],max_tokens:8,temperature:0}),cache:"no-store"});
+  const data=await check.json().catch(()=>({}));
+  if(!check.ok)throw new Error(check.status===401||check.status===403?"Gemini API key rejected or API access is not enabled (HTTP "+check.status+").":(data.error&&data.error.message)||("Gemini test request failed: HTTP "+check.status));
+  if(!data.choices||!data.choices[0]||!data.choices[0].message)throw new Error("Gemini accepted the request but returned no chat completion.");
+  provider="gemini";
  }else{
   const health=await fetch(base+"/health",{method:"GET",headers:{Accept:"application/json"},cache:"no-store"});
   if(!health.ok)throw new Error("Runtime health check failed: HTTP "+health.status);
