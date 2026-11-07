@@ -48,6 +48,27 @@ async function send(t){
  messages.push({role:"user",text:clean,at:new Date().toISOString()});contextStore.capture(clean);renderContinuity();
  const pending={role:"assistant",text:lang==="hi"?"सोच रहा हूँ…":"Thinking…",at:new Date().toISOString(),pending:true};
  messages.push(pending);messages=messages.slice(-300);saveMessages();renderMessages();$("#input").value="";
+ const buildIntent=/(\\b(build|create|make|generate|develop|banao|banaiye|banana|taiyar karo|app banao|project banao)\\b|बनाओ|बनाइए|बनाना|तैयार करो|तैयार करें|बनाकर दो)/i.test(clean);
+ const buildSubject=/(\\b(app|application|project|website|software|tool|dashboard|game|api)\\b|ऐप|एप|प्रोजेक्ट|वेबसाइट|सॉफ्टवेयर|टूल|डैशबोर्ड|गेम)/i.test(clean);
+ if(buildIntent&&buildSubject&&window.IntelligentCodingAgent){
+  try{
+   const client=await ensureModelClient();
+   const generated=await window.IntelligentCodingAgent.generateProject({
+    client,workbench:codeWorkbench,brief:clean,stack:"Choose a reliable simple stack and explain it in README",maxFiles:8,
+    onProgress:event=>{pending.text=(lang==="hi"?"प्रोजेक्ट तैयार हो रहा है: ":"Building project: ")+(event.message||event.stage);renderMessages();}
+   });
+   const workspace=window.IntelligentLocalWorkspace&&window.IntelligentLocalWorkspace.status();
+   if(workspace&&workspace.connected){
+    const saved=await window.IntelligentLocalWorkspace.writeProject(generated.manifest,generated.drafts.map(item=>({path:item.path,content:item.content})));
+    pending.text=(lang==="hi"?"पूरा हुआ! ":"Completed! ")+generated.drafts.length+(lang==="hi"?" फाइलें आपके फोन में सेव हुईं। फोल्डर: ":" files saved to your phone. Folder: ")+saved.folder+"\\n"+generated.drafts.map(x=>"• "+x.path).join("\\n");
+   }else{
+    pending.text=(lang==="hi"?"प्रोजेक्ट की ":"Project ")+generated.drafts.length+(lang==="hi"?" फाइलें Draft में तैयार हैं। फोन में सेव करने के लिए Coding Workshop में Workspace Folder Connect करें।":" files were generated as drafts. Connect a local workspace folder in Coding Workshop to save them to your phone.")+"\\n"+generated.drafts.map(x=>"• "+x.path).join("\\n");
+   }
+   renderCodeDrafts();
+  }catch(error){pending.text=(lang==="hi"?"प्रोजेक्ट बनाते समय समस्या: ":"Project build failed: ")+String(error&&error.message||error);}
+  delete pending.pending;pending.at=new Date().toISOString();saveMessages();renderMessages();return;
+ }
+
  const isRepositoryTask=/(github|git\\s*hub|repository|repo|गिटहब|रिपॉजिटरी)/i.test(clean);
  if(plan.intent==="research"&&!isRepositoryTask){
   try{
@@ -176,6 +197,25 @@ function renderCodeDrafts(){const root=$("#codeDraftList");if(!root)return;root.
 function saveCodeDraft(e){e.preventDefault();try{codeWorkbench.create({path:$("#codePath").value,reason:$("#codeReason").value,before:$("#codeBefore").value,after:$("#codeAfter").value});$("#codeDraftForm").reset();$("#codeStatus").textContent=words[lang].codeSaved;renderCodeDrafts()}catch(err){$("#codeStatus").textContent=err.message}}
 function exportCodeDrafts(){downloadText("intelligent-ai-code-drafts.json",codeWorkbench.exportAll())}
 
+
+function renderWorkspaceStatus(){
+ const el=$("#workspaceStatus");if(!el||!window.IntelligentLocalWorkspace)return;
+ const state=window.IntelligentLocalWorkspace.status();
+ el.textContent=state.connected?(lang==="hi"?"Workspace जुड़ा है: ":"Workspace connected: ")+state.folderName:(state.supported?(lang==="hi"?"Workspace folder अभी नहीं जुड़ा।":"No workspace folder connected."):(lang==="hi"?"इस Browser में Folder Access उपलब्ध नहीं है।":"Folder access is not supported in this browser."));
+ $("#workspaceConnect").disabled=!state.supported;
+}
+async function connectLocalWorkspace(){
+ const button=$("#workspaceConnect"),status=$("#workspaceStatus");button.disabled=true;
+ try{await window.IntelligentLocalWorkspace.connect();renderWorkspaceStatus();}
+ catch(error){status.textContent=String(error&&error.message||error);}
+ finally{button.disabled=false;}
+}
+async function disconnectLocalWorkspace(){
+ try{await window.IntelligentLocalWorkspace.disconnect();renderWorkspaceStatus();}
+ catch(error){$("#workspaceStatus").textContent=String(error&&error.message||error);}
+}
+async function restoreLocalWorkspace(){if(window.IntelligentLocalWorkspace){await window.IntelligentLocalWorkspace.restore();renderWorkspaceStatus();}}
+
 function renderResearchLinks(){const root=$("#researchLinks");if(!root)return;root.replaceChildren();if(!activeResearchQuery)return;for(const item of researchDesk.searchLinks(activeResearchQuery)){const a=document.createElement("a");a.className="research-link";a.href=item.url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="↗ "+item.name;root.append(a)}}
 function renderLiveResearch(result){const root=$("#researchResults"),status=$("#researchProviderStatus");root.replaceChildren();status.replaceChildren();for(const p of result.providers){const badge=document.createElement("span");badge.className="provider-badge "+p.status;badge.textContent=p.name+": "+(p.status==="success"?p.count+" "+words[lang].researchResultCount:p.error);status.append(badge)}if(!result.items.length){const p=document.createElement("p");p.className="empty-state";p.textContent=words[lang].researchNoResults;root.append(p);return}for(const item of result.items){const card=document.createElement("article"),title=document.createElement("b"),snippet=document.createElement("p"),meta=document.createElement("small"),actions=document.createElement("div"),open=document.createElement("a"),save=document.createElement("button");card.className="research-result";title.textContent=item.title;snippet.textContent=item.snippet||item.source;meta.textContent=item.source+" · "+item.kind;open.href=item.url;open.target="_blank";open.rel="noopener noreferrer";open.textContent="↗ "+words[lang].researchOpen;save.type="button";save.textContent=words[lang].researchSaveResult;save.onclick=()=>{try{researchDesk.saveSource({query:activeResearchQuery,title:item.title,url:item.url,notes:item.snippet+"\nSource: "+item.source});$("#researchStatus").textContent=words[lang].researchSaved;renderResearchNotebook();save.disabled=true;save.textContent=lang==="hi"?"सेव हो गया":"Saved"}catch(e){$("#researchStatus").textContent=e.message}};actions.className="research-actions";actions.append(open,save);card.append(title,snippet,meta,actions);root.append(card)}}
 async function prepareResearch(){try{activeResearchQuery=$("#researchQuery").value.trim();researchDesk.searchLinks(activeResearchQuery);renderResearchLinks();if(researchBusy)return;researchBusy=true;$("#researchRun").disabled=true;$("#researchStatus").textContent=words[lang].researchWorking;$("#researchResults").replaceChildren();$("#researchProviderStatus").replaceChildren();const result=await researchEngine.search(activeResearchQuery);latestResearch=result.items;renderLiveResearch(result);$("#researchStatus").textContent=result.failedCount?words[lang].researchPartial:words[lang].researchComplete+" "+result.items.length+" "+words[lang].researchResultCount+" · "+words[lang].researchCoverageNote}catch(e){$("#researchStatus").textContent=e.message}finally{researchBusy=false;$("#researchRun").disabled=false}}
@@ -215,6 +255,30 @@ function addKnowledge(e){e.preventDefault();try{knowledgeStore.add({title:$("#kn
 function exportKnowledge(){const blob=new Blob([knowledgeStore.exportData()],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="intelligent-ai-knowledge-backup.json";a.click();URL.revokeObjectURL(url)}
 function exportChat(){const lines=messages.map(m=>(m.role==="user"?words[lang].you:words[lang].assistant)+"\\n"+m.text).join("\\n\\n");const blob=new Blob([lines||words[lang].empty],{type:"text/plain;charset=utf-8"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=words[lang].exportName+".txt";a.click();URL.revokeObjectURL(url)}
 $$("nav button").forEach(b=>b.onclick=()=>tab(b.dataset.tab));$("#lang").onclick=$("#lang2").onclick=changeLang;$("#menu").onclick=()=>$(".layout").classList.toggle("menu-open");$("#newChat").onclick=()=>{messages=[];saveMessages();renderMessages();tab("chat")};const chatForm=$("#form"),chatInput=$("#input"),chatSendButton=chatForm.querySelector('button');
+
+let voiceRecognition=null,voiceAuto=localStorage.getItem("ia-voice-auto")==="true";
+function speakText(text){
+ if(!("speechSynthesis"in window)){alert(lang==="hi"?"इस ब्राउज़र में आवाज़ पढ़ने की सुविधा उपलब्ध नहीं है।":"Speech output is not supported in this browser.");return;}
+ window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(String(text||""));utterance.lang=lang==="hi"?"hi-IN":"en-IN";
+ const voices=window.speechSynthesis.getVoices();const preferred=voices.find(v=>v.lang.toLowerCase().startsWith(lang==="hi"?"hi":"en-in"))||voices.find(v=>v.lang.toLowerCase().startsWith(lang==="hi"?"hi":"en"));
+ if(preferred)utterance.voice=preferred;window.speechSynthesis.speak(utterance);
+}
+function speakLatestAssistant(){const last=[...messages].reverse().find(m=>m.role==="assistant"&&!m.pending);if(last)speakText(last.text);}
+function startVoiceInput(){
+ const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!Speech){alert(lang==="hi"?"इस Chrome/Browser में Speech Recognition उपलब्ध नहीं है। Chrome में माइक्रोफोन अनुमति दें या टाइप करें।":"Speech recognition is unavailable in this browser. Allow microphone access in Chrome or type instead.");return;}
+ if(voiceRecognition){voiceRecognition.stop();voiceRecognition=null;return;}
+ const recognition=new Speech();voiceRecognition=recognition;recognition.lang=lang==="hi"?"hi-IN":"en-IN";recognition.interimResults=false;recognition.maxAlternatives=1;
+ const button=$("#voiceMic");button.disabled=true;button.textContent=lang==="hi"?"🎙 सुन रहा हूँ…":"🎙 Listening…";
+ recognition.onresult=event=>{const transcript=event.results[0][0].transcript;$("#input").value=transcript;$("#form").requestSubmit();};
+ recognition.onerror=event=>{if(event.error!=="no-speech")$("#storageNote").textContent=(lang==="hi"?"माइक्रोफोन त्रुटि: ":"Microphone error: ")+event.error;};
+ recognition.onend=()=>{voiceRecognition=null;button.disabled=false;button.textContent=lang==="hi"?"🎙 बोलकर पूछें":"🎙 Speak";};
+ try{recognition.start();}catch(error){voiceRecognition=null;button.disabled=false;button.textContent="🎙 बोलकर पूछें";}
+}
+function updateVoiceControls(){
+ const b=$("#voiceAuto");if(!b)return;b.setAttribute("aria-pressed",String(voiceAuto));b.textContent=voiceAuto?(lang==="hi"?"🔈 Auto आवाज़ चालू":"🔈 Auto ON"):(lang==="hi"?"🔈 Auto बंद":"🔈 Auto OFF");
+}
+
 chatSendButton.type="submit";chatSendButton.id="sendButton";chatSendButton.setAttribute("aria-label","Send message");
 chatForm.addEventListener("submit",async e=>{
  e.preventDefault();e.stopPropagation();
@@ -224,7 +288,7 @@ chatForm.addEventListener("submit",async e=>{
  chatSendButton.disabled=true;
  chatSendButton.setAttribute("aria-busy","true");
  try{
-  await send(submitted);
+  await send(submitted);if(voiceAuto){const latest=[...messages].reverse().find(m=>m.role==="assistant"&&!m.pending);if(latest)speakText(latest.text);}
  }catch(error){
   const message=String(error&&error.message||error||"Unknown chat error");
   const last=messages[messages.length-1];
@@ -238,7 +302,7 @@ chatForm.addEventListener("submit",async e=>{
   chatSendButton.disabled=false;chatSendButton.removeAttribute("aria-busy");
   chatInput.focus({preventScroll:true});
  }
-});$("#input").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#form").requestSubmit()}});$("#exportChat").onclick=exportChat;$("#continuityExport").onclick=()=>{exportContinuity();$("#continuityStatus").textContent=words[lang].continuitySaved};$("#continuityClear").onclick=()=>{if(confirm(lang==="hi"?"हाल के निर्देशों का स्थानीय इंडेक्स साफ़ करें? पुष्ट परियोजना नियम सुरक्षित रहेंगे।":"Clear the local recent-instruction index? Confirmed project rules will remain.")){contextStore.clear();renderContinuity();$("#continuityStatus").textContent=words[lang].continuityCleared}};$("#memoryForm").onsubmit=saveMemory;$("#knowledgeForm").onsubmit=addKnowledge;$("#updateProposalForm").onsubmit=createUpdateProposal;$("#updateExport").onclick=exportUpdateLedger;$("#codeDraftForm").onsubmit=saveCodeDraft;$("#codeExportAll").onclick=exportCodeDrafts;$("#researchRun").onclick=prepareResearch;$("#researchAnalyze").onclick=runResearchAnalysis;$("#researchProposal").onclick=createProposalFromResearch;$("#researchSourceForm").onsubmit=saveResearchSource;$("#researchExport").onclick=exportResearch;$("#knowledgeSearch").oninput=renderKnowledge;$("#knowledgeExport").onclick=exportKnowledge;$("#knowledgeClear").onclick=()=>{if(confirm(lang==="hi"?"क्या पूरी ज्ञान लाइब्रेरी हटानी है?":"Delete the entire knowledge library from this device?")){knowledgeStore.clear();renderKnowledge()}};$("#memorySearch").oninput=renderMemory;$("#memoryExport").onclick=exportMemory;$("#memoryClear").onclick=()=>{if(confirm(lang==="hi"?"क्या सभी सेव नोट हटाने हैं?":"Delete all saved notes from this device?")){memoryStore.clear();renderMemory()}};$("#clearChat").onclick=()=>{if(confirm(words[lang].confirm)){messages=[];saveMessages();renderMessages()}};$$("[data-prompt]").forEach(b=>b.onclick=()=>{tab("chat");send(b.dataset.prompt)});$("#auto").checked=localStorage.getItem(AUTO_KEY)==="true";$("#auto").onchange=()=>{localStorage.setItem(AUTO_KEY,$("#auto").checked);language()};const PROVIDER_KEYS={gemini:"ia-provider-gemini",groq:"ia-provider-groq",other:"ia-provider-other"};
+});$("#voiceMic").onclick=startVoiceInput;$("#voiceRead").onclick=speakLatestAssistant;$("#voiceAuto").onclick=()=>{voiceAuto=!voiceAuto;localStorage.setItem("ia-voice-auto",String(voiceAuto));updateVoiceControls();};updateVoiceControls();$("#input").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#form").requestSubmit()}});$("#exportChat").onclick=exportChat;$("#continuityExport").onclick=()=>{exportContinuity();$("#continuityStatus").textContent=words[lang].continuitySaved};$("#continuityClear").onclick=()=>{if(confirm(lang==="hi"?"हाल के निर्देशों का स्थानीय इंडेक्स साफ़ करें? पुष्ट परियोजना नियम सुरक्षित रहेंगे।":"Clear the local recent-instruction index? Confirmed project rules will remain.")){contextStore.clear();renderContinuity();$("#continuityStatus").textContent=words[lang].continuityCleared}};$("#memoryForm").onsubmit=saveMemory;$("#knowledgeForm").onsubmit=addKnowledge;$("#updateProposalForm").onsubmit=createUpdateProposal;$("#updateExport").onclick=exportUpdateLedger;$("#codeDraftForm").onsubmit=saveCodeDraft;$("#workspaceConnect").onclick=connectLocalWorkspace;$("#workspaceDisconnect").onclick=disconnectLocalWorkspace;$("#codeProjectForm").onsubmit=generateCodingProject;$("#codeExportAll").onclick=exportCodeDrafts;$("#researchRun").onclick=prepareResearch;$("#researchAnalyze").onclick=runResearchAnalysis;$("#researchProposal").onclick=createProposalFromResearch;$("#researchSourceForm").onsubmit=saveResearchSource;$("#researchExport").onclick=exportResearch;$("#knowledgeSearch").oninput=renderKnowledge;$("#knowledgeExport").onclick=exportKnowledge;$("#knowledgeClear").onclick=()=>{if(confirm(lang==="hi"?"क्या पूरी ज्ञान लाइब्रेरी हटानी है?":"Delete the entire knowledge library from this device?")){knowledgeStore.clear();renderKnowledge()}};$("#memorySearch").oninput=renderMemory;$("#memoryExport").onclick=exportMemory;$("#memoryClear").onclick=()=>{if(confirm(lang==="hi"?"क्या सभी सेव नोट हटाने हैं?":"Delete all saved notes from this device?")){memoryStore.clear();renderMemory()}};$("#clearChat").onclick=()=>{if(confirm(words[lang].confirm)){messages=[];saveMessages();renderMessages()}};$$("[data-prompt]").forEach(b=>b.onclick=()=>{tab("chat");send(b.dataset.prompt)});$("#auto").checked=localStorage.getItem(AUTO_KEY)==="true";$("#auto").onchange=()=>{localStorage.setItem(AUTO_KEY,$("#auto").checked);language()};const PROVIDER_KEYS={gemini:"ia-provider-gemini",groq:"ia-provider-groq",other:"ia-provider-other"};
 async function restoreProviderKeys(){
  const savedKeys={};
  for(const [id,key] of [["gemini","geminiKey"],["groq","groqKey"]]){
@@ -276,4 +340,4 @@ $("#modelDisconnectButton").onclick=()=>{
  clearModelSessionUI();
 };
 window.addEventListener("ia-model-disconnected",clearModelSessionUI);
-language();if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));
+language();restoreLocalWorkspace().catch(()=>{});if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));
